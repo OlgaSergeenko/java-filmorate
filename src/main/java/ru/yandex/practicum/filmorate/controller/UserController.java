@@ -17,6 +17,7 @@ import java.util.Map;
 @RequestMapping("/users")
 public class UserController {
 
+    private int id = 1;
     private final Map<Integer, User> users = new HashMap<>();
     private final static Logger log = LoggerFactory.getLogger(UserController.class);
 
@@ -30,6 +31,7 @@ public class UserController {
     @PostMapping
     public User createUser(@Valid @RequestBody User user) {
         validateUser(user);
+        user.setId(generateId());
         users.put(user.getId(), user);
         log.info("Добавлен новый пользователь - " + user);
         return user;
@@ -37,6 +39,9 @@ public class UserController {
 
     @PutMapping
     public User updateUser(@Valid @RequestBody User user) {
+        if (!users.containsKey(user.getId())) {
+          throw new ValidationException("Пользователь с id " + user.getId()  + " не найден");
+        }
         validateUser(user);
         for (Integer id : users.keySet()) {
             if (user.getId() == id) {
@@ -48,14 +53,26 @@ public class UserController {
         return user;
     }
 
+    private int generateId() {
+        return id++;
+    }
+
     private void validateUser(User user) {
-        if (user.getLogin().contains(" ")) {
-            log.debug("Логин содержит пробелы.");
-            throw new ValidationException("Логин не должен содержать пробелов.");
+        if (user.getEmail().isEmpty() || user.getEmail() == null || !user.getEmail().contains("@")) {
+            log.debug("Email указан неверно.");
+            throw new ValidationException("Email указан неверно.");
+        }
+        if (user.getLogin().contains(" ") || user.getLogin().isEmpty() || user.getLogin() == null) {
+            log.debug("Логин содержит пробелы млм не указан.");
+            throw new ValidationException("Логин не должен содержать пробелов или быть пустым.");
         }
         if (user.getName() == null || user.getName().isEmpty()) {
             user.setName(user.getLogin());
             log.info("Логин установлен на имя пользователя.");
+        }
+        if (user.getBirthday().isAfter(LocalDate.now())){
+            log.debug("Дата рождения в прошлом");
+            throw new ValidationException("ДР не может быть в прошлом");
         }
         }
     }

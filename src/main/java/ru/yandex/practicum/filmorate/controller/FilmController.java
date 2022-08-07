@@ -17,6 +17,8 @@ import java.util.Map;
 @RestController
 @RequestMapping("/films")
 public class FilmController {
+
+    private int id = 1;
     private final Map<Integer, Film> films = new HashMap<>();
     private final static int MAX_DESCRIPTION_LENGTH = 200;
     private final static LocalDate OLDEST_RELEASE_DATE = LocalDate.of(1895, 12, 28);
@@ -32,13 +34,18 @@ public class FilmController {
     @PostMapping
     public Film createFilm(@Valid @RequestBody Film film) {
         validateFilm(film);
+        film.setId(generateId());
         films.put(film.getId(), film);
         log.info("Добавлен фильм: " + film.getName());
         return film;
     }
 
     @PutMapping
-    public Film updateFilm(Film film) {
+    public Film updateFilm(@Valid @RequestBody Film film) {
+        if (!films.containsKey(film.getId())) {
+            log.debug("Фильм с id " + film.getId() + " не найден.") ;
+            throw new ValidationException("Фильм не найден.");
+        }
         validateFilm(film);
         for (Integer id : films.keySet()) {
             if (film.getId() == id) {
@@ -51,13 +58,25 @@ public class FilmController {
     }
 
     private void validateFilm(Film film) {
-        if (film.getDescription().length() > MAX_DESCRIPTION_LENGTH) {
-            film.setDescription(film.getDescription().substring(0, MAX_DESCRIPTION_LENGTH + 1));
-            log.info("Описание фильма обрезано до 200 символов.");
+        if (film.getName() == null || film.getName().isEmpty()) {
+            log.debug("Отсутствует название фильма.");
+            throw new ValidationException("Отсутствует название фильма.");
+        }
+        if (film.getDescription() != null && film.getDescription().length() > MAX_DESCRIPTION_LENGTH) {
+            log.debug("Описание фильма превышеает максимальный размер 200 символов");
+            throw new ValidationException("Описание фильма превышеает максимальный размер 200 символов");
         }
         if (film.getReleaseDate().isBefore(OLDEST_RELEASE_DATE)) {
             log.debug("Релиз фильма ранее 28/12/1895");
             throw new ValidationException("Дата релиза фильма не может быть раньше 28 декабря 1895 года.");
         }
+        if (film.getDuration() <= 0) {
+            log.debug("Продолжительность фильма не может быть 0 или меньше");
+            throw new ValidationException("Продолжительность фильма не может быть 0 или меньше");
+        }
+    }
+
+    private int generateId() {
+        return id++;
     }
 }

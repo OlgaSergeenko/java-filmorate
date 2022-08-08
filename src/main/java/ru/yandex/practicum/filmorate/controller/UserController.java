@@ -3,11 +3,11 @@ package ru.yandex.practicum.filmorate.controller;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.*;
+import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
 
 import javax.validation.Valid;
-import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -40,7 +40,8 @@ public class UserController {
     @PutMapping
     public User updateUser(@Valid @RequestBody User user) {
         if (!users.containsKey(user.getId())) {
-          throw new ValidationException("Пользователь с id " + user.getId()  + " не найден");
+            log.debug("Пользователь с id " + user.getId() + " не найден.") ;
+            throw new NotFoundException("Пользователь с id " + user.getId()  + " не найден");
         }
         validateUser(user);
         for (Integer id : users.keySet()) {
@@ -58,21 +59,13 @@ public class UserController {
     }
 
     private void validateUser(User user) {
-        if (user.getEmail().isEmpty() || user.getEmail() == null || !user.getEmail().contains("@")) {
-            log.debug("Email указан неверно.");
-            throw new ValidationException("Email указан неверно.");
+        if (user.getLogin().contains(" ")) {
+            log.debug("Логин содержит пробелы.");
+            throw new ValidationException("Логин не должен содержать пробелов.");
         }
-        if (user.getLogin().contains(" ") || user.getLogin().isEmpty() || user.getLogin() == null) {
-            log.debug("Логин содержит пробелы млм не указан.");
-            throw new ValidationException("Логин не должен содержать пробелов или быть пустым.");
-        }
-        if (user.getName() == null || user.getName().isEmpty()) {
+        if (user.getName() == null || user.getName().isEmpty() || user.getName().isBlank()) {
             user.setName(user.getLogin());
             log.info("Логин установлен на имя пользователя.");
-        }
-        if (user.getBirthday().isAfter(LocalDate.now())){
-            log.debug("Дата рождения в прошлом");
-            throw new ValidationException("ДР не может быть в прошлом");
         }
         }
     }

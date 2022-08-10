@@ -15,34 +15,39 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/users")
-public class UserController {
+public class UserController extends AbstractController<User> {
 
-    private int id = 1;
-    private final Map<Integer, User> users = new HashMap<>();
+    private int userId;
+    private final Map<Integer, User> users;
     private final static Logger log = LoggerFactory.getLogger(UserController.class);
 
+    public UserController() {
+        userId = 0;
+        users = new HashMap<>();
+    }
+
+    @Override
     @GetMapping
-    public List<User> findAllUsers() {
+    public List<User> findAll() {
         List<User> userList = new ArrayList<>();
         userList.addAll(users.values());
         return userList;
     }
 
+    @Override
     @PostMapping
-    public User createUser(@Valid @RequestBody User user) {
+    public User create(@Valid @RequestBody User user) {
         validateUser(user);
-        user.setId(generateId());
+        userId = generateId(userId);
+        user.setId(userId);
         users.put(user.getId(), user);
         log.info("Добавлен новый пользователь - " + user);
         return user;
     }
 
+    @Override
     @PutMapping
-    public User updateUser(@Valid @RequestBody User user) {
-        if (!users.containsKey(user.getId())) {
-            log.debug("Пользователь с id " + user.getId() + " не найден.") ;
-            throw new NotFoundException("Пользователь с id " + user.getId()  + " не найден");
-        }
+    public User update(@Valid @RequestBody User user) {
         validateUser(user);
         for (Integer id : users.keySet()) {
             if (user.getId() == id) {
@@ -54,18 +59,18 @@ public class UserController {
         return user;
     }
 
-    private int generateId() {
-        return id++;
-    }
-
     private void validateUser(User user) {
+        if (!users.containsKey(user.getId()) && user.getId() != 0) {
+            log.debug("Пользователь с id " + user.getId() + " не найден.") ;
+            throw new NotFoundException("Пользователь с id " + user.getId()  + " не найден");
+        }
         if (user.getLogin().contains(" ")) {
             log.debug("Логин содержит пробелы.");
             throw new ValidationException("Логин не должен содержать пробелов.");
-        }
+            }
         if (user.getName() == null || user.getName().isEmpty() || user.getName().isBlank()) {
             user.setName(user.getLogin());
             log.info("Логин установлен на имя пользователя.");
-        }
+            }
         }
     }

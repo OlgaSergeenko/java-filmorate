@@ -24,7 +24,7 @@ private final FilmController filmController = new FilmController();
                     "любимый плед уютно свернулся на кре",
             LocalDate.of(2022,4,20), 120);
             final ValidationException exception = assertThrows(ValidationException.class,
-                    () -> filmController.createFilm(film));
+                    () -> filmController.create(film));
             assertEquals("Описание фильма превышеает максимальный размер 200 символов", exception.getMessage());
         }
 
@@ -36,8 +36,8 @@ private final FilmController filmController = new FilmController();
                         "вы решилиотдохнуть и провести вечер за просмотром фильма. Вкусная еда уже готовится, " +
                         "любимый плед уютно свернулся на кр",
                 LocalDate.of(2022,04,20), 120);
-        filmController.createFilm(film);
-        assertEquals(filmController.findAllFilms().get(0), film, "Фильмы не совпадают");
+        filmController.create(film);
+        assertEquals(filmController.findAll().get(0), film, "Фильмы не совпадают");
     }
 
     @Test
@@ -46,7 +46,7 @@ private final FilmController filmController = new FilmController();
         Film film = new Film(123,"name", "description",
                 LocalDate.of(2012,12,27), 120);
         final NotFoundException exception = assertThrows(NotFoundException.class,
-                () -> filmController.updateFilm(film));
+                () -> filmController.update(film));
         assertEquals("Фильм не найден.", exception.getMessage());
     }
 
@@ -55,8 +55,8 @@ private final FilmController filmController = new FilmController();
     public void successCreateFilm_old() {
         Film film = new Film("name", "description",
                 LocalDate.of(1895,12,28), 120);
-        filmController.createFilm(film);
-        assertEquals(filmController.findAllFilms().get(0), film, "Фильмы не совпадают.");
+        filmController.create(film);
+        assertEquals(filmController.findAll().get(0), film, "Фильмы не совпадают.");
     }
 
     @Test
@@ -65,7 +65,7 @@ private final FilmController filmController = new FilmController();
         Film film = new Film("name", "description",
                 LocalDate.of(1895,12,27), 120);
         final ValidationException exception = assertThrows(ValidationException.class,
-                () -> filmController.createFilm(film));
+                () -> filmController.create(film));
         assertEquals("Дата релиза фильма не может быть раньше 28 декабря 1895 года.", exception.getMessage());
     }
 }

@@ -16,36 +16,41 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/films")
-public class FilmController {
+public class FilmController extends AbstractController<Film> {
 
-    private int id = 1;
-    private final Map<Integer, Film> films = new HashMap<>();
+    private int filmId;
+    private final Map<Integer, Film> films;
     private final static int MAX_DESCRIPTION_LENGTH = 200;
     private final static LocalDate OLDEST_RELEASE_DATE = LocalDate.of(1895, 12, 28);
     private final static Logger log = LoggerFactory.getLogger(FilmController.class);
 
+    public FilmController() {
+        filmId = 0;
+        films = new HashMap<>();
+    }
+
+    @Override
     @GetMapping
-    public List<Film> findAllFilms() {
+    public List<Film> findAll() {
         List<Film> filmsList = new ArrayList<>();
         filmsList.addAll(films.values());
         return filmsList;
     }
 
+    @Override
     @PostMapping
-    public Film createFilm(@Valid @RequestBody Film film) {
+    public Film create(@Valid @RequestBody Film film) {
         validateFilm(film);
-        film.setId(generateId());
+        filmId = generateId(filmId);
+        film.setId(filmId);
         films.put(film.getId(), film);
         log.info("Добавлен фильм: " + film.getName());
         return film;
     }
 
+    @Override
     @PutMapping
-    public Film updateFilm(@Valid @RequestBody Film film) {
-        if (!films.containsKey(film.getId())) {
-            log.debug("Фильм с id " + film.getId() + " не найден.") ;
-            throw new NotFoundException("Фильм не найден.");
-        }
+    public Film update(@Valid @RequestBody Film film) {
         validateFilm(film);
         for (Integer id : films.keySet()) {
             if (film.getId() == id) {
@@ -58,6 +63,10 @@ public class FilmController {
     }
 
     private void validateFilm(Film film) {
+        if (!films.containsKey(film.getId()) && film.getId() != 0) {
+            log.debug("Фильм с id " + film.getId() + " не найден.") ;
+            throw new NotFoundException("Фильм не найден.");
+        }
         if (film.getDescription().length() > MAX_DESCRIPTION_LENGTH) {
             log.debug("Описание фильма превышеает максимальный размер 200 символов");
             throw new ValidationException("Описание фильма превышеает максимальный размер 200 символов");
@@ -66,9 +75,5 @@ public class FilmController {
             log.debug("Релиз фильма ранее 28/12/1895");
             throw new ValidationException("Дата релиза фильма не может быть раньше 28 декабря 1895 года.");
         }
-    }
-
-    private int generateId() {
-        return id++;
     }
 }

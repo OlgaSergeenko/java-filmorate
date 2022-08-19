@@ -16,36 +16,16 @@ class UserControllerTest {
     private final UserController userController = new UserController();
 
     @Test
-    @DisplayName("Login contains spaces")
-    public void createUser_failLogin() {
-        User user = new User("email@gmail.com", "user one", "Name",
-                LocalDate.of(1989, 11, 6));
-        final ValidationException exception = assertThrows(ValidationException.class,
-                () -> userController.create(user));
-        assertEquals("Логин не должен содержать пробелов.", exception.getMessage());
-    }
-
-    @Test
     @DisplayName("Name replaced with login when name is blank")
-    public void createUser_blankName() {
+    public void createUserBlankName() {
         User user = new User("email@gmail.com", "userOne", "  ",
                 LocalDate.of(1989, 11, 6));
         userController.create(user);
         assertEquals(user.getLogin(), user.getName(), "Логин и Имя пользователя не совпадают");
     }
-
-    @Test
-    @DisplayName("Name replaced with login when name is null")
-    public void createUser_nullName() {
-        User user = new User("email@gmail.com", "userOne", null,
-                LocalDate.of(1989, 11, 6));
-        userController.create(user);
-        assertEquals(user.getLogin(), user.getName(), "Логин и Имя пользователя не совпадают");
-    }
-
     @Test
     @DisplayName("Name replaced with login when name is empty")
-    public void createUser_emptyName() {
+    public void createUserEmptyName() {
         User user = new User("email@gmail.com", "userOne", "",
                 LocalDate.of(1989, 11, 6));
         userController.create(user);
@@ -54,7 +34,7 @@ class UserControllerTest {
 
     @Test
     @DisplayName("User with worng id")
-    public void failUpdateUser_unknown() {
+    public void failUpdateUserUnknown() {
         User user = new User(123,"email@gmail.com", "userOne", "",
                 LocalDate.of(1989, 11, 6));
         final NotFoundException exception = assertThrows(NotFoundException.class,

@@ -4,7 +4,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
-import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
 
 import javax.validation.Valid;
@@ -64,11 +63,7 @@ public class UserController extends AbstractController<User> {
             log.debug("Пользователь с id " + user.getId() + " не найден.") ;
             throw new NotFoundException("Пользователь с id " + user.getId()  + " не найден");
         }
-        if (user.getLogin().contains(" ")) {
-            log.debug("Логин содержит пробелы.");
-            throw new ValidationException("Логин не должен содержать пробелов.");
-            }
-        if (user.getName() == null || user.getName().isEmpty() || user.getName().isBlank()) {
+        if (user.getName().isEmpty() || user.getName().isBlank()) {
             user.setName(user.getLogin());
             log.info("Логин установлен на имя пользователя.");
             }

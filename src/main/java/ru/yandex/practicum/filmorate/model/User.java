@@ -7,27 +7,19 @@ import java.time.LocalDate;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-
+@RequiredArgsConstructor
 public class User {
     private int id;
-    @NotNull
-    @NotBlank
-    @NotEmpty
     @Email
-    private String email;
     @NotNull
-    @NotEmpty
-    @NotBlank
+    @NonNull
+    private String email;
+    @NonNull
+    @Pattern(regexp = "^\\S+$")
     private String login;
+    @NonNull
     private String name;
+    @NonNull
     @Past
     private LocalDate birthday;
-
-    public User(String email, String login, String name, LocalDate birthday) {
-        this.email = email;
-        this.login = login;
-        this.name = name;
-        this.birthday = birthday;
-    }
-
 }

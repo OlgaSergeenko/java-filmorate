@@ -5,12 +5,13 @@ import org.springframework.stereotype.Controller;
 import java.util.List;
 
 @Controller
-public abstract class AbstractController<T> {
-    public abstract List<T> findAll();
-    public abstract T create(T value);
-    public abstract T update(T value);
+public interface AbstractController<T> {
+    List<T> findAll();
+    T create(T value);
+    T update(T value);
+    T getById(long id);
 
-    public int generateId(int startId) {
+    default Long generateId(long startId) {
         return ++startId;
     }
 }

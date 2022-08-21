@@ -6,13 +6,16 @@ import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.Positive;
 import java.time.LocalDate;
+import java.util.HashSet;
+import java.util.Set;
 
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 @RequiredArgsConstructor
+@Builder
 public class Film {
-    private int id;
+    private long id;
     @NonNull
     @NotEmpty
     @NotBlank
@@ -24,4 +27,13 @@ public class Film {
     @NonNull
     @Positive
     private int duration;
+    Set<Long> likes = new HashSet<>();
+
+    public void addLike(long id) {
+        likes.add(id);
+    }
+
+    public int getLikesSize() {
+        return likes.size();
+    }
 }

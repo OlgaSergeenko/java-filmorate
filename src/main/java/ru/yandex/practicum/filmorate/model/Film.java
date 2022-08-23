@@ -27,7 +27,8 @@ public class Film {
     @NonNull
     @Positive
     private int duration;
-    Set<Long> likes = new HashSet<>();
+    @Builder.Default
+    private Set<Long> likes = new HashSet<>();
 
     public void addLike(long id) {
         likes.add(id);

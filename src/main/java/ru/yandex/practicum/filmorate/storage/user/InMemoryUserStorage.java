@@ -1,7 +1,7 @@
 package ru.yandex.practicum.filmorate.storage.user;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
-import ru.yandex.practicum.filmorate.controller.ErrorHandler;
 import ru.yandex.practicum.filmorate.exception.IncorrectIdException;
 import ru.yandex.practicum.filmorate.exception.UserNotFoundException;
 import ru.yandex.practicum.filmorate.model.User;
@@ -9,9 +9,8 @@ import ru.yandex.practicum.filmorate.model.User;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static ru.yandex.practicum.filmorate.model.Constants.LOG_USER_CONTROLLER;
-
 @Component
+@Slf4j
 public class InMemoryUserStorage implements UserStorage {
 
     private Long userId;
@@ -21,6 +20,7 @@ public class InMemoryUserStorage implements UserStorage {
         userId = 0L;
         users = new HashMap<>();
     }
+
     @Override
     public List<User> findAll() {
         List<User> userList = new ArrayList<>();
@@ -34,7 +34,7 @@ public class InMemoryUserStorage implements UserStorage {
         userId = generateId(userId);
         user.setId(userId);
         users.put(user.getId(), user);
-        LOG_USER_CONTROLLER.info("Добавлен новый пользователь - " + user);
+        log.info("Добавлен новый пользователь - " + user);
         return user;
     }
 
@@ -45,7 +45,7 @@ public class InMemoryUserStorage implements UserStorage {
             if (user.getId() == id) {
                 users.remove(id);
                 users.put(user.getId(), user);
-                LOG_USER_CONTROLLER.info("Пользователь с id " + user.getId() + " изменен");
+                log.info("Пользователь с id " + user.getId() + " изменен");
             }
         }
         return user;
@@ -114,12 +114,12 @@ public class InMemoryUserStorage implements UserStorage {
 
     private void validateUser(User user) {
         if (!users.containsKey(user.getId()) && user.getId() != 0) {
-            LOG_USER_CONTROLLER.debug("Пользователь с id " + user.getId() + " не найден.") ;
+            log.debug("Пользователь с id " + user.getId() + " не найден.") ;
             throw new UserNotFoundException("Пользователь с id " + user.getId()  + " не найден");
         }
         if (user.getName().isEmpty() || user.getName().isBlank()) {
             user.setName(user.getLogin());
-            LOG_USER_CONTROLLER.info("Логин установлен на имя пользователя.");
+            log.info("Логин установлен на имя пользователя.");
         }
     }
 

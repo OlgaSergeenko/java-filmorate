@@ -6,7 +6,7 @@ import ru.yandex.practicum.filmorate.exception.IncorrectIdException;
 import ru.yandex.practicum.filmorate.exception.UserNotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
-import ru.yandex.practicum.filmorate.model.User;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -14,6 +14,7 @@ import java.util.stream.Collectors;
 import static ru.yandex.practicum.filmorate.model.Constants.*;
 
 @Component
+@Slf4j
 public class InMemoryFilmStorage implements FilmStorage {
 
     private long filmId;
@@ -34,7 +35,7 @@ public class InMemoryFilmStorage implements FilmStorage {
         filmId = generateId(filmId);
         film.setId(filmId);
         films.put(film.getId(), film);
-        LOG_FILM_CONTROLLER.info("Добавлен фильм: " + film.getName());
+        log.info("Добавлен фильм: " + film.getName());
         return film;
     }
 
@@ -45,7 +46,7 @@ public class InMemoryFilmStorage implements FilmStorage {
             if (film.getId() == id) {
                 films.remove(id);
                 films.put(film.getId(), film);
-                LOG_FILM_CONTROLLER.info("Информация о фильме отредактирована: " + film.getName());
+                log.info("Информация о фильме отредактирована: " + film.getName());
             }
         }
         return film;
@@ -104,15 +105,15 @@ public class InMemoryFilmStorage implements FilmStorage {
 
     private void validateFilm(Film film) {
         if (!films.containsKey(film.getId()) && film.getId() != 0L) {
-            LOG_FILM_CONTROLLER.debug("Фильм с id " + film.getId() + " не найден.") ;
+            log.debug("Фильм с id " + film.getId() + " не найден.") ;
             throw new UserNotFoundException("Фильм не найден.");
         }
         if (film.getDescription().length() > MAX_DESCRIPTION_LENGTH) {
-            LOG_FILM_CONTROLLER.debug("Описание фильма превышеает максимальный размер 200 символов");
+            log.debug("Описание фильма превышеает максимальный размер 200 символов");
             throw new ValidationException("Описание фильма превышеает максимальный размер 200 символов");
         }
         if (film.getReleaseDate().isBefore(OLDEST_RELEASE_DATE)) {
-            LOG_FILM_CONTROLLER.debug("Релиз фильма ранее 28/12/1895");
+            log.debug("Релиз фильма ранее 28/12/1895");
             throw new ValidationException("Дата релиза фильма не может быть раньше 28 декабря 1895 года.");
         }
     }

@@ -12,7 +12,7 @@ import java.util.Set;
 @Service
 public class UserService implements UserStorage {
 
-    private final InMemoryUserStorage inMemoryUserStorage;
+    private final UserStorage inMemoryUserStorage;
 
     @Autowired
     public UserService(InMemoryUserStorage inMemoryUserStorage) {
@@ -47,7 +47,7 @@ public class UserService implements UserStorage {
         return inMemoryUserStorage.removeFriend(userId, friendId);
     }
 
-    @Override
+
     public List<User> getAllFriends(long userId) {
         return inMemoryUserStorage.getAllFriends(userId);
     }

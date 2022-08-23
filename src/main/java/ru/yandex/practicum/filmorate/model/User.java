@@ -10,7 +10,6 @@ import java.util.Set;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@RequiredArgsConstructor
 @Builder
 public class User {
     private long id;
@@ -25,6 +24,7 @@ public class User {
     @NonNull
     @Past
     private LocalDate birthday;
+    @Builder.Default
     private Set<Long> friends = new HashSet<>();
 
     public void addFriend(long id) {

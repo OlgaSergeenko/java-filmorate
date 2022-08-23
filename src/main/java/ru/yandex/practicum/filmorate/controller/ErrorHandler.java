@@ -5,49 +5,43 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import ru.yandex.practicum.filmorate.exception.*;
-import ru.yandex.practicum.filmorate.model.ErrorResponse;
 
 @RestControllerAdvice
 public class ErrorHandler {
 
-    @ExceptionHandler
+    @ExceptionHandler(UserNotFoundException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
-    public ErrorResponse handleUserNotFoundException (final UserNotFoundException e) {
-        return new ErrorResponse(
-                e.getMessage()
-        );
+    public String handleUserNotFoundException (final UserNotFoundException e) {
+        return e.getMessage();
     }
 
     @ExceptionHandler
     @ResponseStatus(HttpStatus.NOT_FOUND)
-    public ErrorResponse handleFilmNotFoundException (final FilmNotFoundException e) {
-        return new ErrorResponse(
-                e.getMessage()
-        );
+    public String handleFilmNotFoundException (final FilmNotFoundException e) {
+        return e.getMessage();
     }
 
     @ExceptionHandler
     @ResponseStatus(HttpStatus.NOT_FOUND)
-    public ErrorResponse handleIncorrectIdException (final IncorrectIdException e) {
-        return new ErrorResponse(
-                e.getMessage()
-        );
+    public String handleIncorrectIdException (final IncorrectIdException e) {
+        return e.getMessage();
     }
 
     @ExceptionHandler
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ErrorResponse handleIncorrectParameterException (final IncorrectParameterException e) {
-        return new ErrorResponse(
-                e.getMessage()
-        );
+    public String handleIncorrectParameterException (final IncorrectParameterException e) {
+        return e.getMessage();
     }
 
     @ExceptionHandler
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ErrorResponse handleValidationException (final ValidationException e) {
-        return new ErrorResponse(
-                e.getMessage()
-        );
+    public String handleValidationException (final ValidationException e) {
+        return e.getMessage();
     }
 
+    @ExceptionHandler
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    public String handleThrowable(final Throwable e) {
+        return "Произошла непредвиденная ошибка.";
+    }
 }

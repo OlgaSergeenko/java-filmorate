@@ -1,67 +1,66 @@
 package ru.yandex.practicum.filmorate.service;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import ru.yandex.practicum.filmorate.exception.FilmNotFoundException;
+import ru.yandex.practicum.filmorate.exception.IncorrectIdException;
+import ru.yandex.practicum.filmorate.exception.UserNotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
-import ru.yandex.practicum.filmorate.storage.film.InMemoryFilmStorage;
-import ru.yandex.practicum.filmorate.storage.user.InMemoryUserStorage;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
-public class FilmService implements FilmStorage {
+@RequiredArgsConstructor
+public class FilmService {
 
     private final FilmStorage inMemoryFilmStorage;
     private final UserStorage inMemoryUserStorage;
 
-    @Autowired
-    public FilmService(FilmStorage inMemoryFilmStorage, UserStorage inMemoryUserStorage) {
-        this.inMemoryFilmStorage = inMemoryFilmStorage;
-        this.inMemoryUserStorage = inMemoryUserStorage;
+    public Set<Long> addLike(long filmId, long userId) {
+        validateId(filmId);
+        validateId(userId);
+        Film film = inMemoryFilmStorage.getById(filmId);
+        film.addLike(userId);
+        return film.getLikes();
+    }
+
+    public Set<Long> removeLike(long filmId, long userId) {
+        validateId(filmId);
+        validateId(userId);
+        Set<Long> likes = inMemoryFilmStorage.getById(filmId).getLikes();
+        if (likes.contains(userId)) {
+            likes.remove(userId);
+        } else {
+            throw new UserNotFoundException(
+                    String.format("Полтзователь с id %d не ставил лайк фильму %d", userId, filmId));
+        }
+        return inMemoryFilmStorage.getById(filmId).getLikes();
     }
 
     public List<Film> getPopularFilm(int count) {
-        return inMemoryFilmStorage.getPopularFilm(count);
-    }
-
-    @Override
-    public List<Film> findAll() {
-        return inMemoryFilmStorage.findAll();
-    }
-
-    @Override
-    public Film create(Film film) {
-        return inMemoryFilmStorage.create(film);
-    }
-
-    @Override
-    public Film update(Film film) {
-        return inMemoryFilmStorage.update(film);
-    }
-
-    @Override
-    public Film getById(long id) {
-        return inMemoryFilmStorage.getById(id);
-    }
-
-    @Override
-    public Set<Long> addLike(long filmId, long userId) {
-        if (inMemoryUserStorage.getById(userId) != null) {
-            inMemoryFilmStorage.addLike(filmId, userId);
+        int filmsInMemory = inMemoryFilmStorage.findAll().size();
+        if (filmsInMemory < count) {
+            count = filmsInMemory;
         }
-        return inMemoryFilmStorage.getById(filmId).getLikes();
+        return inMemoryFilmStorage.findAll()
+                .stream()
+                .sorted(Comparator.comparingInt(Film::getLikesSize).reversed())
+                .limit(count)
+                .collect(Collectors.toList());
     }
 
-    @Override
-    public Set<Long> removeLike(long filmId, long userId) {
-        if (inMemoryUserStorage.getById(userId) != null) {
-            inMemoryFilmStorage.removeLike(filmId, userId);
+    private void validateId (long id) {
+        if (id <= 0) {
+            throw new IncorrectIdException(String.format("Некорректный id  - %d", id));
+        } else if (inMemoryFilmStorage.findAll()
+                .stream()
+                .noneMatch(x -> x.getId() == id)) {
+            throw new FilmNotFoundException(String.format("Фильм с id %d не найден.", id));
         }
-        return inMemoryFilmStorage.getById(filmId).getLikes();
     }
-
-
 }

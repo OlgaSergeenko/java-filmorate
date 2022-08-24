@@ -30,7 +30,7 @@ public class ErrorHandler {
     @ExceptionHandler
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public String handleIncorrectParameterException (final IncorrectParameterException e) {
-        return e.getMessage();
+        return String.format("Ошибка с полем \"%s\".", e.getParameter());
     }
 
     @ExceptionHandler

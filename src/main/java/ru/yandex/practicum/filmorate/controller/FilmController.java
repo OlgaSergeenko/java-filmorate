@@ -1,7 +1,6 @@
 package ru.yandex.practicum.filmorate.controller;
 
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.exception.IncorrectParameterException;
 import ru.yandex.practicum.filmorate.model.Film;
@@ -14,53 +13,43 @@ import java.util.Set;
 
 @RestController
 @RequestMapping("/films")
-
-public class FilmController implements FilmStorage {
+@RequiredArgsConstructor
+public class FilmController{
     private final FilmService filmService;
-    @Autowired
-    public FilmController(FilmService filmService) {
-        this.filmService = filmService;
-    }
+    private final FilmStorage inMemoryFilmStorage;
 
-    @Override
     @GetMapping
     public List<Film> findAll() {
-        return filmService.findAll();
+        return inMemoryFilmStorage.findAll();
     }
 
-    @Override
     @PostMapping
     public Film create(@Valid @RequestBody Film film) {
-       return filmService.create(film);
+       return inMemoryFilmStorage.create(film);
     }
 
-    @Override
     @PutMapping
     public Film update(@Valid @RequestBody Film film) {
-        return filmService.update(film);
+        return inMemoryFilmStorage.update(film);
     }
 
-    @Override
     @GetMapping("/{id}")
     public Film getById(@PathVariable("id") long filmId) {
-        return filmService.getById(filmId);
+        return inMemoryFilmStorage.getById(filmId);
     }
 
-    @Override
     @PutMapping("/{id}/like/{userId}")
     public Set<Long> addLike(@PathVariable("id") long filmId,
                              @PathVariable("userId") long userId) {
         return filmService.addLike(filmId, userId);
     }
 
-    @Override
     @DeleteMapping("/{id}/like/{userId}")
     public Set<Long> removeLike(@PathVariable("id") long filmId,
                                 @PathVariable("userId") long userId) {
         return filmService.removeLike(filmId, userId);
     }
 
-    @Override
     @GetMapping("/popular")
     public List<Film> getPopularFilm(@RequestParam(defaultValue = "10", required = false) int count) {
         if (count <= 0) {

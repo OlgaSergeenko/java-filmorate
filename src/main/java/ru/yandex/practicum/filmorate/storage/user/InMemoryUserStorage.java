@@ -7,13 +7,12 @@ import ru.yandex.practicum.filmorate.exception.UserNotFoundException;
 import ru.yandex.practicum.filmorate.model.User;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Component
 @Slf4j
 public class InMemoryUserStorage implements UserStorage {
 
-    private Long userId;
+    private long userId;
     private final Map<Long, User> users;
 
     public InMemoryUserStorage() {
@@ -62,54 +61,8 @@ public class InMemoryUserStorage implements UserStorage {
                 .findFirst()
                 .orElseThrow(() -> new UserNotFoundException(String.format("Пользователь с id %d не найден.", userId))));
     }
-
-    @Override
-    public Set<Long> addFriend(long userId, long friendId) {
-        validateId(userId);
-        validateId(friendId);
-        User user = getById(userId);
-        user.addFriend(friendId);
-        User friend = getById(friendId);
-        friend.addFriend(userId);
-        return user.getFriends();
-    }
-
-    @Override
-    public Set<Long> removeFriend(long userId, long friendId) {
-        validateId(userId);
-        validateId(friendId);
-        User user = getById(userId);
-        user.getFriends().remove(friendId);
-        User friend = getById(friendId);
-        friend.getFriends().remove(userId);
-        return user.getFriends();
-    }
-
-    @Override
-    public List<User> getAllFriends(long userId) {
-        validateId(userId);
-        Set<Long> friends = getById(userId).getFriends();
-        List<User> userFriends = new ArrayList<>();
-        for (long id : friends) {
-            userFriends.add(getById(id));
-        }
-        return userFriends;
-    }
-
-    @Override
-    public List<User> getCommonFriends(long userId, long otherUserId) {
-        validateId(userId);
-        validateId(otherUserId);
-        Set<Long> userFriends = users.get(userId).getFriends();
-        Set<Long> otherUserFriends = users.get(otherUserId).getFriends();
-        Set<Long> common = userFriends.stream()
-                .filter(otherUserFriends::contains)
-                .collect(Collectors.toSet());
-        List<User> commonFriends = new ArrayList<>();
-        for (long id : common) {
-            commonFriends.add(getById(id));
-        }
-        return commonFriends;
+    private long generateId(long startId) {
+        return ++startId;
     }
 
     private void validateUser(User user) {
@@ -120,16 +73,6 @@ public class InMemoryUserStorage implements UserStorage {
         if (user.getName().isEmpty() || user.getName().isBlank()) {
             user.setName(user.getLogin());
             log.info("Логин установлен на имя пользователя.");
-        }
-    }
-
-    private void validateId (long id) {
-        if (id <= 0) {
-            throw new IncorrectIdException(String.format("Некорректный id  - %d", id));
-        } else if (users.keySet()
-                .stream()
-                .noneMatch(x -> x == id)) {
-            throw new UserNotFoundException(String.format("Пользователь с id %d не найден.", id));
         }
     }
 }

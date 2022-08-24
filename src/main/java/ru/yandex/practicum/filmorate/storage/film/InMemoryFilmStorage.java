@@ -9,9 +9,8 @@ import ru.yandex.practicum.filmorate.model.Film;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
-import static ru.yandex.practicum.filmorate.model.Constants.*;
+import static ru.yandex.practicum.filmorate.util.Constants.*;
 
 @Component
 @Slf4j
@@ -63,44 +62,8 @@ public class InMemoryFilmStorage implements FilmStorage {
                 .orElseThrow(() -> new FilmNotFoundException(String.format("Фильм с id %d не найден.", filmId))));
     }
 
-    public Set<Long> addLike(long filmId, long userId) {
-        validateId(filmId);
-        Film film = getById(filmId);
-        film.addLike(userId);
-        return film.getLikes();
-    }
-
-    public Set<Long> removeLike(long filmId, long userId) {
-        validateId(filmId);
-        Set<Long> likes = getById(filmId).getLikes();
-        if (likes.contains(userId)) {
-            likes.remove(userId);
-        } else {
-            throw new UserNotFoundException(
-                    String.format("Полтзователь с id %d не ставил лайк фильму %d", userId, filmId));
-        }
-        return getById(filmId).getLikes();
-    }
-
-    public List<Film> getPopularFilm(int count) {
-        if (films.size() < count) {
-            count = films.size();
-        }
-        return films.values()
-                .stream()
-                .sorted(Comparator.comparingInt(Film::getLikesSize).reversed())
-                .limit(count)
-                .collect(Collectors.toList());
-    }
-
-    private void validateId (long id) {
-        if (id <= 0) {
-            throw new IncorrectIdException(String.format("Некорректный id  - %d", id));
-        } else if (films.keySet()
-                .stream()
-                .noneMatch(x -> x == id)) {
-            throw new FilmNotFoundException(String.format("Фильм с id %d не найден.", id));
-        }
+    private long generateId(long startId) {
+        return ++startId;
     }
 
     private void validateFilm(Film film) {

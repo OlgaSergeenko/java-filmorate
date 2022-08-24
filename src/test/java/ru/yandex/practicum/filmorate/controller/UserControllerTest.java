@@ -16,7 +16,11 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.*;
 
 class UserControllerTest {
-    private final UserStorage userController = new UserController(new UserService(new InMemoryUserStorage()));
+
+    private final UserStorage userStorage = new InMemoryUserStorage();
+    private final UserController userController = new UserController(
+            new UserService(userStorage), userStorage);
+
     private final User user = User.builder()
             .email("email@gmail.com")
             .login("userOne")

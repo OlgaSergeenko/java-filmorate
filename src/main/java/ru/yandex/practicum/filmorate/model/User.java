@@ -4,12 +4,15 @@ import lombok.*;
 
 import javax.validation.constraints.*;
 import java.time.LocalDate;
+import java.util.HashSet;
+import java.util.Set;
+
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@RequiredArgsConstructor
+@Builder
 public class User {
-    private int id;
+    private long id;
     @Email
     @NotNull
     @NonNull
@@ -17,9 +20,14 @@ public class User {
     @NonNull
     @Pattern(regexp = "^\\S+$")
     private String login;
-    @NonNull
     private String name;
     @NonNull
     @Past
     private LocalDate birthday;
+    @Builder.Default
+    private Set<Long> friends = new HashSet<>();
+
+    public void addFriend(long id) {
+        friends.add(id);
+    }
 }

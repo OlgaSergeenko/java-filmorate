@@ -69,6 +69,3 @@ INSERT INTO MOVIE (movie_name, description, release_date, duration, rate, mpa_id
 VALUES ( 'movie', 'descr', '2016-05-05', 120, 4, 1 ),
        ( 'movie2', 'descr2', '2016-04-04', 130, 5, 2 ),
        ( 'movie3', 'descr3', '2002-04-04', 65, 1, 3 );
-
-
-

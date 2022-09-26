@@ -63,7 +63,7 @@ public class FilmDbStorage implements FilmStorage {
                     filmRow.getInt("duration"),
                     filmRow.getInt("rate"),
                     mpaStorage.getMpaById(filmRow.getInt("mpa_id")).get(),
-                    setFilmGenres(jdbcTemplate.queryForRowSet(GET_FILM_GENRES)));
+                    setFilmGenres(jdbcTemplate.queryForRowSet(GET_FILM_GENRES, filmRow.getLong("movie_id"))));
             films.add(film);
         }
         return films;
@@ -73,7 +73,7 @@ public class FilmDbStorage implements FilmStorage {
         List<Genre> genres = new ArrayList<>();
         while (genreRows.next()) {
             Genre genre = new Genre(
-                    genreRows.getInt("id"),
+                    genreRows.getInt("genre_id"),
                     genreRows.getString("genre_name"));
             genres.add(genre);
         }

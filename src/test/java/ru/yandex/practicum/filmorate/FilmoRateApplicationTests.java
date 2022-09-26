@@ -36,7 +36,7 @@ import static org.junit.jupiter.api.Assertions.*;
 @ActiveProfiles("test")
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 @AutoConfigureTestDatabase //(replace = AutoConfigureTestDatabase.Replace.NONE)
-//@Sql(scripts = "classpath:schema.sql", executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
+@Sql(scripts = "classpath:testschema.sql", executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
 class FilmoRateApplicationTests {
 
     private final UserStorage userStorage;

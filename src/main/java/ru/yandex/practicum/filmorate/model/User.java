@@ -24,10 +24,4 @@ public class User {
     @NonNull
     @Past
     private LocalDate birthday;
-    @Builder.Default
-    private Set<Long> friends = new HashSet<>();
-
-    public void addFriend(long id) {
-        friends.add(id);
-    }
 }

@@ -51,15 +51,15 @@ public class InMemoryUserStorage implements UserStorage {
     }
 
     @Override
-    public User getById(long userId) {
+    public Optional<User> getUserById(long userId) {
         if (userId  <= 0L) {
             throw new IncorrectIdException(String.format("Некорректный id  - %d", userId));
         }
-        return users.get(users.keySet()
+        return Optional.of(users.get(users.keySet()
                 .stream()
                 .filter(x -> x.equals((Long) userId))
                 .findFirst()
-                .orElseThrow(() -> new UserNotFoundException(String.format("Пользователь с id %d не найден.", userId))));
+                .orElseThrow(() -> new UserNotFoundException(String.format("Пользователь с id %d не найден.", userId)))));
     }
     private long generateId(long startId) {
         return ++startId;

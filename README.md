@@ -1,11 +1,11 @@
 # java-filmorate
 Template repository for Filmorate project.
 
-[Link to diagram in project docs](filmorate_Database.png)
+[Link to diagram in project docs](drawSQL-filmorate.v3.png)
 
 To see the diagram online use this [link](https://drawsql.app/teams/new-13/diagrams/filmorate)
 
-![Database](filmorate_Database.png)
+![Database](drawSQL-filmorate.v3.png)
 
 #### Пример запроса на получение списка юзеров:
 SELECT * </br>

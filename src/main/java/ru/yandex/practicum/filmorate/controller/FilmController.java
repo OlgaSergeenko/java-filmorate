@@ -1,6 +1,6 @@
 package ru.yandex.practicum.filmorate.controller;
 
-import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.exception.IncorrectParameterException;
 import ru.yandex.practicum.filmorate.model.Film;
@@ -9,33 +9,38 @@ import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 
 import javax.validation.Valid;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 @RestController
 @RequestMapping("/films")
-@RequiredArgsConstructor
 public class FilmController{
     private final FilmService filmService;
-    private final FilmStorage inMemoryFilmStorage;
+    private final FilmStorage filmStorage;
+
+    public FilmController(FilmService filmService, @Qualifier("filmDbStorage") FilmStorage filmStorage) {
+        this.filmService = filmService;
+        this.filmStorage = filmStorage;
+    }
 
     @GetMapping
     public List<Film> findAll() {
-        return inMemoryFilmStorage.findAll();
+        return filmStorage.findAll();
     }
 
     @PostMapping
     public Film create(@Valid @RequestBody Film film) {
-       return inMemoryFilmStorage.create(film);
+       return filmStorage.create(film);
     }
 
     @PutMapping
     public Film update(@Valid @RequestBody Film film) {
-        return inMemoryFilmStorage.update(film);
+        return filmStorage.update(film);
     }
 
     @GetMapping("/{id}")
-    public Film getById(@PathVariable("id") long filmId) {
-        return inMemoryFilmStorage.getById(filmId);
+    public Optional<Film> getById(@PathVariable("id") long filmId) {
+        return filmStorage.getById(filmId);
     }
 
     @PutMapping("/{id}/like/{userId}")

@@ -51,15 +51,15 @@ public class InMemoryFilmStorage implements FilmStorage {
         return film;
     }
 
-    public Film getById(long filmId) {
+    public Optional<Film> getById(long filmId) {
         if (filmId  <= 0L) {
             throw new IncorrectIdException(String.format("Некорректный id  - %d", filmId));
         }
-        return films.get(films.keySet()
+        return Optional.of(films.get(films.keySet()
                 .stream()
                 .filter(x -> x.equals((Long) filmId))
                 .findFirst()
-                .orElseThrow(() -> new FilmNotFoundException(String.format("Фильм с id %d не найден.", filmId))));
+                .orElseThrow(() -> new FilmNotFoundException(String.format("Фильм с id %d не найден.", filmId)))));
     }
 
     private long generateId(long startId) {

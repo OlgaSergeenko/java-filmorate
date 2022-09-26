@@ -6,6 +6,8 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import ru.yandex.practicum.filmorate.exception.*;
 
+import java.util.Arrays;
+
 @RestControllerAdvice
 public class ErrorHandler {
 
@@ -42,6 +44,19 @@ public class ErrorHandler {
     @ExceptionHandler
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public String handleThrowable(final Throwable e) {
+        System.out.println(Arrays.toString(e.getStackTrace()));
         return "Произошла непредвиденная ошибка.";
+    }
+
+    @ExceptionHandler(MpaNotFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public String handleMpaNotFoundException (final MpaNotFoundException e) {
+        return e.getMessage();
+    }
+
+    @ExceptionHandler(GenreNotFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public String handleGenreNotFoundException (final GenreNotFoundException e) {
+        return e.getMessage();
     }
 }

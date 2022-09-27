@@ -2,16 +2,21 @@ package ru.yandex.practicum.filmorate.storage.user;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.support.GeneratedKeyHolder;
+import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.jdbc.support.rowset.SqlRowSet;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.exception.IncorrectIdException;
 import ru.yandex.practicum.filmorate.exception.UserNotFoundException;
 import ru.yandex.practicum.filmorate.model.User;
 
+import java.sql.Date;
+import java.sql.PreparedStatement;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 @Component
@@ -23,8 +28,6 @@ public class UserDbStorage implements UserStorage {
     private final static String UPDATE = "UPDATE APP_USER SET email = ?,login = ?,name = ?,birthday = ? WHERE ID = ?";
     private final static String GET_BY_ID = "select * from APP_USER where id = ?";
     private final static String GET = "select * from APP_USER";
-    private final static String GET_BY_LOGIN = "select * from APP_USER WHERE login = ?";
-
     private final JdbcTemplate jdbcTemplate;
 
     @Override
@@ -69,16 +72,16 @@ public class UserDbStorage implements UserStorage {
     @Override
     public User create(User user) {
         validateUserName(user);
-        jdbcTemplate.update(CREATE,
-                user.getEmail(),
-                user.getLogin(),
-                user.getName(),
-                user.getBirthday());
-        SqlRowSet userRows = jdbcTemplate.queryForRowSet(GET_BY_LOGIN, user.getLogin());
-        if (userRows.next()) {
-            long id = userRows.getLong("id");
-            user.setId(id);
-        }
+        KeyHolder keyHolder = new GeneratedKeyHolder();
+        jdbcTemplate.update(connection -> {
+                    PreparedStatement preparedStatement = connection.prepareStatement(CREATE, Statement.RETURN_GENERATED_KEYS);
+                    preparedStatement.setString(1, user.getEmail());
+                    preparedStatement.setString(2, user.getLogin());
+                    preparedStatement.setString(3, user.getName());
+                    preparedStatement.setDate(4, Date.valueOf(user.getBirthday()));
+                    return preparedStatement;
+                }, keyHolder);
+        user.setId(Objects.requireNonNull(keyHolder.getKey()).longValue());
         return user;
     }
 

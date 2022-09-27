@@ -3,6 +3,8 @@ package ru.yandex.practicum.filmorate.storage.film;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.support.GeneratedKeyHolder;
+import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.jdbc.support.rowset.SqlRowSet;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.exception.FilmNotFoundException;
@@ -14,8 +16,12 @@ import ru.yandex.practicum.filmorate.model.Mpa;
 import ru.yandex.practicum.filmorate.storage.genre.GenreStorage;
 import ru.yandex.practicum.filmorate.storage.mpa.MpaStorage;
 
+import java.sql.Date;
+import java.sql.PreparedStatement;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -83,22 +89,23 @@ public class FilmDbStorage implements FilmStorage {
     @Override
     public Film create(Film film) {
         validateFilm(film);
-        jdbcTemplate.update(CREATE,
-                film.getName(),
-                film.getDescription(),
-                film.getReleaseDate(),
-                film.getDuration(),
-                film.getRate(),
-                film.getMpa().getId());
-        SqlRowSet movieRows = jdbcTemplate.queryForRowSet(GET_FILM_BY_NAME, film.getName());
-        if (movieRows.next()) {
-            long id = movieRows.getLong("movie_id");
-            Optional<Mpa> rating = mpaStorage.getMpaById(movieRows.getInt("mpa_id"));
-            film.setId(id);
-            rating.ifPresent(film::setMpa);
-            if (film.getGenres() != null) {
-                film.setGenres(getFilmGenres(film.getId(), film.getGenres()));
-            }
+        KeyHolder keyHolder = new GeneratedKeyHolder();
+        jdbcTemplate.update(connection -> {
+                    PreparedStatement preparedStatement = connection.prepareStatement(
+                            CREATE, Statement.RETURN_GENERATED_KEYS);
+                    preparedStatement.setString(1, film.getName());
+                    preparedStatement.setString(2, film.getDescription());
+                    preparedStatement.setDate(3, Date.valueOf(film.getReleaseDate()));
+                    preparedStatement.setInt(4, film.getDuration());
+                    preparedStatement.setInt(5, film.getRate());
+                    preparedStatement.setInt(6, film.getMpa().getId());
+                    return preparedStatement;
+                }, keyHolder);
+        film.setId(Objects.requireNonNull(keyHolder.getKey()).longValue());
+        Optional<Mpa> rating = mpaStorage.getMpaById(film.getMpa().getId());
+        rating.ifPresent(film::setMpa);
+        if (film.getGenres() != null) {
+            film.setGenres(getFilmGenres(film.getId(), film.getGenres()));
         }
         return film;
     }

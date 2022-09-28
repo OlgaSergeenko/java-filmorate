@@ -27,7 +27,7 @@ public class GenreDbStorage implements GenreStorage {
         SqlRowSet genreRows = jdbcTemplate.queryForRowSet(GET);
         while (genreRows.next()) {
             Genre genre = new Genre(
-                    genreRows.getInt("id"),
+                    genreRows.getLong("id"),
                     genreRows.getString("genre_name"));
             genres.add(genre);
         }
@@ -35,18 +35,18 @@ public class GenreDbStorage implements GenreStorage {
     }
 
     @Override
-    public Optional<Genre> getGenreById(int id) {
+    public Optional<Genre> getGenreById(long id) {
         SqlRowSet genreRow = jdbcTemplate.queryForRowSet(GET_BY_ID, id);
         if(genreRow.next()) {
             Genre genre = new Genre (
-                    genreRow.getInt("id"),
+                    genreRow.getLong("id"),
                     genreRow.getString("genre_name"));
 
             log.info("Найден жанр: {} {}", genre.getId(), genre.getName());
 
             return Optional.of(genre);
         } else {
-            log.info("Жанр с идентификатором {} не найден.", id);
+            log.error("Жанр с идентификатором {} не найден.", id);
             throw new GenreNotFoundException(String.format("Жанр с идентификатором %d не найден.", id));
         }
     }

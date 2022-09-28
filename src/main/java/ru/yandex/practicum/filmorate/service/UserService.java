@@ -2,7 +2,6 @@ package ru.yandex.practicum.filmorate.service;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.rowset.SqlRowSet;
 import org.springframework.stereotype.Service;
@@ -26,7 +25,7 @@ public class UserService {
     private final static String DELETE_FRIEND = "DELETE FROM USER_FRIEND WHERE user_id = ? AND friend_id = ?";
     private final static String GET_FRIENDS_BY_USER = "SELECT friend_id FROM USER_FRIEND WHERE user_id = ?";
     @Autowired
-    public UserService(JdbcTemplate jdbcTemplate, @Qualifier("userDbStorage") UserStorage userStorage) {
+    public UserService(JdbcTemplate jdbcTemplate, UserStorage userStorage) {
         this.jdbcTemplate = jdbcTemplate;
         this.userStorage = userStorage;
     }

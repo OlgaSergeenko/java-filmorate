@@ -1,7 +1,6 @@
 package ru.yandex.practicum.filmorate.service;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.rowset.SqlRowSet;
 import org.springframework.stereotype.Service;
@@ -27,7 +26,6 @@ public class FilmService {
                     "GROUP BY m.movie_id\n" +
                     "ORDER BY COUNT(ml.user_id) desc\n" +
                     "limit ?";
-
     private final static String CREATE_LIKE = "INSERT INTO MOVIE_LIKES (movie_id, user_id) VALUES ( ?, ? )";
     private final static String REMOVE_LIKE = "DELETE FROM MOVIE_LIKES WHERE MOVIE_ID = ? AND USER_ID = ?";
     private final static String GET_FILM_LIKES =
@@ -41,8 +39,8 @@ public class FilmService {
                     "FROM MOVIE_LIKES\n" +
                     "WHERE user_id = ? AND  movie_id = ?;";
 
-    public FilmService(@Qualifier ("filmDbStorage")FilmStorage filmStorage,
-                       @Qualifier ("userDbStorage")UserStorage userStorage,
+    public FilmService(FilmStorage filmStorage,
+                       UserStorage userStorage,
                        JdbcTemplate jdbcTemplate) {
         this.filmStorage = filmStorage;
         this.userStorage = userStorage;

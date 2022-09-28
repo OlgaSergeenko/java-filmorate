@@ -24,6 +24,7 @@ import ru.yandex.practicum.filmorate.storage.genre.GenreStorage;
 import ru.yandex.practicum.filmorate.storage.mpa.MpaStorage;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
+import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
@@ -219,7 +220,7 @@ class FilmoRateApplicationTests {
     }
 
     @Test
-    public void shouldCreateFilm() {
+    public void shouldCreateFilm() throws SQLException {
         Film film = Film.builder()
                 .name("three")
                 .description("tratatata")
@@ -238,7 +239,7 @@ class FilmoRateApplicationTests {
 
     @Test
     @DisplayName("film released on 28/12/1895")
-    public void successCreateFilmOld() {
+    public void successCreateFilmOld() throws SQLException {
         Film film = Film.builder()
                 .name("four")
                 .description("tralala")
@@ -256,7 +257,7 @@ class FilmoRateApplicationTests {
     }
 
     @Test
-    public void successUpdateFilm() {
+    public void successUpdateFilm() throws SQLException {
         Film update = Film.builder()
                 .id(1)
                 .name("nameNew")
@@ -307,7 +308,7 @@ class FilmoRateApplicationTests {
     }
 
     @Test
-    public void shouldGetById() {
+    public void shouldGetById() throws SQLException {
         Optional<Film> filmFound = filmStorage.getById(2);
         assertThat(filmFound)
                 .isPresent()
@@ -350,7 +351,7 @@ class FilmoRateApplicationTests {
     }
 
     @Test
-    public void shouldGetPopularFilm() {
+    public void shouldGetPopularFilm() throws SQLException {
         filmService.addLike(1, 1);
         filmService.addLike(1, 2);
         Optional<Film> film1 = filmStorage.getById(1);

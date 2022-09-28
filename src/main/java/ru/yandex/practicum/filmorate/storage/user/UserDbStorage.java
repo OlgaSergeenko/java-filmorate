@@ -37,20 +37,24 @@ public class UserDbStorage implements UserStorage {
         }
         SqlRowSet userRows = jdbcTemplate.queryForRowSet(GET_BY_ID, id);
         if(userRows.next()) {
-            User user = new User(
-                    userRows.getLong("id"),
-                    userRows.getString("email"),
-                    userRows.getString("login"),
-                    userRows.getString("name"),
-                    userRows.getDate("birthday").toLocalDate());
+            User user = makeUser(userRows);
 
             log.info("Найден пользователь: {} {}", user.getId(), user.getLogin());
 
             return Optional.of(user);
         } else {
-            log.info("Пользователь с идентификатором {} не найден.", id);
+            log.error("Пользователь с идентификатором {} не найден.", id);
             throw new UserNotFoundException(String.format("Пользователь с идентификатором %d не найден.", id));
         }
+    }
+
+    private User makeUser(SqlRowSet userRows) {
+        return new User(
+                userRows.getLong("id"),
+                Objects.requireNonNull(userRows.getString("email")),
+                Objects.requireNonNull(userRows.getString("login")),
+                userRows.getString("name"),
+                Objects.requireNonNull(userRows.getDate("birthday")).toLocalDate());
     }
 
     @Override
@@ -58,12 +62,7 @@ public class UserDbStorage implements UserStorage {
         List<User> users = new ArrayList<>();
         SqlRowSet userRows = jdbcTemplate.queryForRowSet(GET);
         while (userRows.next()) {
-            User user = new User(
-                    userRows.getLong("id"),
-                    userRows.getString("email"),
-                    userRows.getString("login"),
-                    userRows.getString("name"),
-                    userRows.getDate("birthday").toLocalDate());
+            User user = makeUser(userRows);
             users.add(user);
         }
         return users;
@@ -93,7 +92,7 @@ public class UserDbStorage implements UserStorage {
         }
         Optional<User> userToUpdate = getUserById(user.getId());
         if (userToUpdate.isEmpty()){
-            log.info("Пользователь с идентификатором {} не найден.", user.getId());
+            log.error("Пользователь с идентификатором {} не найден.", user.getId());
             throw new UserNotFoundException(String.format("Пользователь с идентификатором %d не найден.", user.getId()));
         }
         jdbcTemplate.update(UPDATE,

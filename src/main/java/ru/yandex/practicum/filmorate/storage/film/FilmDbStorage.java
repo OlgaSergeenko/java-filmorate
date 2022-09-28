@@ -9,6 +9,7 @@ import org.springframework.jdbc.support.rowset.SqlRowSet;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.exception.FilmNotFoundException;
 import ru.yandex.practicum.filmorate.exception.IncorrectIdException;
+import ru.yandex.practicum.filmorate.exception.MpaNotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
@@ -16,9 +17,7 @@ import ru.yandex.practicum.filmorate.model.Mpa;
 import ru.yandex.practicum.filmorate.storage.genre.GenreStorage;
 import ru.yandex.practicum.filmorate.storage.mpa.MpaStorage;
 
-import java.sql.Date;
-import java.sql.PreparedStatement;
-import java.sql.Statement;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -63,12 +62,12 @@ public class FilmDbStorage implements FilmStorage {
         while (filmRow.next()) {
             Film film = new Film(
                     filmRow.getLong("movie_id"),
-                    filmRow.getString("movie_name"),
-                    filmRow.getString("description"),
-                    filmRow.getDate("release_date").toLocalDate(),
+                    Objects.requireNonNull(filmRow.getString("movie_name")),
+                    Objects.requireNonNull(filmRow.getString("description")),
+                    Objects.requireNonNull(filmRow.getDate("release_date")).toLocalDate(),
                     filmRow.getInt("duration"),
                     filmRow.getInt("rate"),
-                    mpaStorage.getMpaById(filmRow.getInt("mpa_id")).get(),
+                    getMpa(filmRow.getInt("mpa_id")),
                     setFilmGenres(jdbcTemplate.queryForRowSet(GET_FILM_GENRES, filmRow.getLong("movie_id"))));
             films.add(film);
         }
@@ -98,7 +97,7 @@ public class FilmDbStorage implements FilmStorage {
                     preparedStatement.setDate(3, Date.valueOf(film.getReleaseDate()));
                     preparedStatement.setInt(4, film.getDuration());
                     preparedStatement.setInt(5, film.getRate());
-                    preparedStatement.setInt(6, film.getMpa().getId());
+                    preparedStatement.setLong(6, film.getMpa().getId());
                     return preparedStatement;
                 }, keyHolder);
         film.setId(Objects.requireNonNull(keyHolder.getKey()).longValue());
@@ -111,14 +110,14 @@ public class FilmDbStorage implements FilmStorage {
     }
 
     @Override
-    public Film update(Film film) {
+    public Film update(Film film){
         validateFilm(film);
         if (film.getId()  <= 0L) {
             throw new IncorrectIdException(String.format("Некорректный id  - %d", film.getId()));
         }
         Optional<Film> optionalFilm = getById(film.getId());
         if (optionalFilm.isEmpty()) {
-            log.info("Фильм с идентификатором {} не найден.", film.getId());
+            log.error("Фильм с идентификатором {} не найден.", film.getId());
             throw new FilmNotFoundException(String.format("Фильм с идентификатором %d не найден.", film.getId()));
         }
         jdbcTemplate.update(UPDATE,
@@ -147,24 +146,37 @@ public class FilmDbStorage implements FilmStorage {
             throw new IncorrectIdException(String.format("Некорректный id  - %d", id));
         }
         SqlRowSet filmsRows = jdbcTemplate.queryForRowSet(GET_FILM_BY_ID, id);
-        if(filmsRows.next()) {
-            Film film = new Film(
-                    filmsRows.getLong("movie_id"),
-                    filmsRows.getString("movie_name"),
-                    filmsRows.getString("description"),
-                    filmsRows.getDate("release_date").toLocalDate(),
-                    filmsRows.getInt("duration"),
-                    filmsRows.getInt("rate"),
-                    mpaStorage.getMpaById(filmsRows.getInt("mpa_id")).get(),
-                    setFilmGenres(id));
+        if (filmsRows.next()) {
+            Film film = makeFilm(filmsRows, id);
 
             log.info("Найден фильм: {} {}", film.getId(), film.getName());
 
             return Optional.of(film);
         } else {
-            log.info("Фильм с идентификатором {} не найден.", id);
+            log.error("Фильм с идентификатором {} не найден.", id);
             throw new FilmNotFoundException(String.format("Фильм с идентификатором %d не найден.", id));
         }
+    }
+
+    private Film makeFilm (SqlRowSet filmsRows, long filmId) {
+        return new Film(
+                filmsRows.getLong("movie_id"),
+                Objects.requireNonNull(filmsRows.getString("movie_name")),
+                Objects.requireNonNull(filmsRows.getString("description")),
+                Objects.requireNonNull(filmsRows.getDate("release_date")).toLocalDate(),
+                filmsRows.getInt("duration"),
+                filmsRows.getInt("rate"),
+                getMpa(filmsRows.getLong("mpa_id")),
+                setFilmGenres(filmId));
+    }
+
+    private Mpa getMpa(long mpaId) {
+        Optional<Mpa> mpa = mpaStorage.getMpaById(mpaId);
+        if (mpa.isEmpty()) {
+            log.error("Рейтинг с идентификатором {} не найден.", mpaId);
+            throw new MpaNotFoundException(String.format("Рейтинг с идентификатором %d не найден.", mpaId));
+        }
+        return mpa.get();
     }
 
     private List<Genre> getFilmGenres(long filmId, List<Genre> genres) {
@@ -196,7 +208,7 @@ public class FilmDbStorage implements FilmStorage {
 
     private void validateFilm(Film film) {
         if (film.getReleaseDate().isBefore(OLDEST_RELEASE_DATE)) {
-            log.debug("Релиз фильма ранее 28/12/1895");
+            log.error("Релиз фильма ранее 28/12/1895");
             throw new ValidationException("Дата релиза фильма не может быть раньше 28 декабря 1895 года.");
         }
     }

@@ -4,13 +4,8 @@ import lombok.*;
 
 @Data
 @Builder
-@RequiredArgsConstructor
+@AllArgsConstructor
 public class Mpa {
-    private int id;
+    private long id;
     private String name;
-
-    public Mpa(int id, String name) {
-        this.id = id;
-        this.name = name;
-    }
 }

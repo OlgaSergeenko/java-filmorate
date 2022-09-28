@@ -16,7 +16,6 @@ import java.util.Set;
 
 @RestController
 @RequestMapping("/users")
-@Component
 public class UserController {
 
     private final UserService userService;

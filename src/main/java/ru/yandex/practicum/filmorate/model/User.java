@@ -4,8 +4,6 @@ import lombok.*;
 
 import javax.validation.constraints.*;
 import java.time.LocalDate;
-import java.util.HashSet;
-import java.util.Set;
 
 @Data
 @AllArgsConstructor
@@ -24,10 +22,4 @@ public class User {
     @NonNull
     @Past
     private LocalDate birthday;
-    @Builder.Default
-    private Set<Long> friends = new HashSet<>();
-
-    public void addFriend(long id) {
-        friends.add(id);
-    }
 }

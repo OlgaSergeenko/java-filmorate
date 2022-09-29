@@ -6,8 +6,8 @@ import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.Positive;
 import java.time.LocalDate;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.ArrayList;
+import java.util.List;
 
 @Data
 @AllArgsConstructor
@@ -27,14 +27,9 @@ public class Film {
     @NonNull
     @Positive
     private int duration;
+    private int rate;
+    @NonNull
+    private Mpa mpa;
     @Builder.Default
-    private Set<Long> likes = new HashSet<>();
-
-    public void addLike(long id) {
-        likes.add(id);
-    }
-
-    public int getLikesSize() {
-        return likes.size();
-    }
+    private List<Genre> genres = new ArrayList<>();
 }

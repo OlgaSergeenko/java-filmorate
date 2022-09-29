@@ -1,78 +1,84 @@
 package ru.yandex.practicum.filmorate.service;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.support.rowset.SqlRowSet;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.IncorrectIdException;
 import ru.yandex.practicum.filmorate.exception.UserNotFoundException;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
 @Slf4j
-@RequiredArgsConstructor
 public class UserService {
 
-    private final UserStorage inMemoryUserStorage;
+    private final UserStorage userStorage;
+    private final JdbcTemplate jdbcTemplate;
+    private final static String CREATE_FRIEND = "INSERT INTO USER_FRIEND (USER_ID, FRIEND_ID) VALUES ( ?, ? )";
+    private final static String DELETE_FRIEND = "DELETE FROM USER_FRIEND WHERE user_id = ? AND friend_id = ?";
+    private final static String GET_FRIENDS_BY_USER = "SELECT friend_id FROM USER_FRIEND WHERE user_id = ?";
+    @Autowired
+    public UserService(JdbcTemplate jdbcTemplate, UserStorage userStorage) {
+        this.jdbcTemplate = jdbcTemplate;
+        this.userStorage = userStorage;
+    }
 
-    public Set<Long> addFriend(long userId, long friendId) {
+    public Set<User> addFriend(long userId, long friendId) {
         if (userId == friendId) {
             throw new IncorrectIdException("Пользователь не может добавить в друзья себя.");
         }
         validateId(userId);
         validateId(friendId);
-        User user = inMemoryUserStorage.getById(userId);
-        user.addFriend(friendId);
-        User friend = inMemoryUserStorage.getById(friendId);
-        friend.addFriend(userId);
-        return user.getFriends();
+        jdbcTemplate.update(CREATE_FRIEND, userId, friendId);
+        return getAllFriends(userId);
     }
 
-    public Set<Long> removeFriend(long userId, long friendId) {
+    public Set<User> removeFriend(long userId, long friendId) {
         validateId(userId);
         validateId(friendId);
-        User user = inMemoryUserStorage.getById(userId);
-        user.getFriends().remove(friendId);
-        User friend = inMemoryUserStorage.getById(friendId);
-        friend.getFriends().remove(userId);
-        return user.getFriends();
+        jdbcTemplate.update(DELETE_FRIEND, userId, friendId);
+        return getAllFriends(userId);
     }
 
-
-    public List<User> getAllFriends(long userId) {
+    public Set<User> getAllFriends(long userId) {
         validateId(userId);
-        Set<Long> friends = inMemoryUserStorage.getById(userId).getFriends();
-        List<User> userFriends = new ArrayList<>();
-        for (long id : friends) {
-            userFriends.add(inMemoryUserStorage.getById(id));
+        Set<User> friends = new HashSet<>();
+        SqlRowSet userRows = jdbcTemplate.queryForRowSet(GET_FRIENDS_BY_USER, userId);
+        while (userRows.next()) {
+            Optional<User> user = userStorage.getUserById(userRows.getLong("friend_id"));
+            user.ifPresent(friends::add);
         }
-        return userFriends;
+        return friends;
     }
 
-    public List<User> getCommonFriends(long userId, long otherUserId) {
+    public Set<User> getCommonFriends(long userId, long otherUserId) {
         validateId(userId);
         validateId(otherUserId);
-        Set<Long> userFriends = inMemoryUserStorage.getById(userId).getFriends();
-        Set<Long> otherUserFriends = inMemoryUserStorage.getById(otherUserId).getFriends();
-        Set<Long> common = userFriends.stream()
-                .filter(otherUserFriends::contains)
+        Set<Long> userFriends = getAllFriends(userId).stream()
+                .map(User::getId)
                 .collect(Collectors.toSet());
-        List<User> commonFriends = new ArrayList<>();
-        for (long id : common) {
-            commonFriends.add(inMemoryUserStorage.getById(id));
+        Set<Long> otherUserFriends = getAllFriends(otherUserId).stream()
+                .map(User::getId)
+                .collect(Collectors.toSet());
+        return userFriends.stream()
+                .filter(otherUserFriends::contains)
+                .map(userStorage::getUserById)
+                .filter(Optional::isPresent)
+                .map(Optional::get)
+                .collect(Collectors.toSet());
         }
-        return commonFriends;
-    }
 
-    public void validateId (long id) {
+    private void validateId (long id) {
         if (id <= 0) {
             throw new IncorrectIdException(String.format("Некорректный id  - %d", id));
-        } else if (inMemoryUserStorage.findAll()
+        } else if (userStorage.findAll()
                 .stream()
                 .noneMatch(x -> x.getId() == id)) {
             throw new UserNotFoundException(String.format("Пользователь с id %d не найден.", id));

@@ -11,23 +11,23 @@ import ru.yandex.practicum.filmorate.model.Genre;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Component
 @Slf4j
 @RequiredArgsConstructor
 public class GenreDbStorage implements GenreStorage {
 
-    private final static String GET = "SELECT * FROM genre";
-    private final static String GET_BY_ID = "SELECT * FROM genre WHERE ID = ?";
     private final JdbcTemplate jdbcTemplate;
 
     @Override
     public List<Genre> getGenres() {
         List<Genre> genres = new ArrayList<>();
-        SqlRowSet genreRows = jdbcTemplate.queryForRowSet(GET);
+        String sql = "SELECT * FROM genre";
+        SqlRowSet genreRows = jdbcTemplate.queryForRowSet(sql);
         while (genreRows.next()) {
             Genre genre = new Genre(
-                    genreRows.getLong("id"),
+                    genreRows.getLong("genre_id"),
                     genreRows.getString("genre_name"));
             genres.add(genre);
         }
@@ -36,10 +36,11 @@ public class GenreDbStorage implements GenreStorage {
 
     @Override
     public Optional<Genre> getGenreById(long id) {
-        SqlRowSet genreRow = jdbcTemplate.queryForRowSet(GET_BY_ID, id);
-        if(genreRow.next()) {
-            Genre genre = new Genre (
-                    genreRow.getLong("id"),
+        String sql = "SELECT * FROM genre WHERE genre_id = ?";
+        SqlRowSet genreRow = jdbcTemplate.queryForRowSet(sql, id);
+        if (genreRow.next()) {
+            Genre genre = new Genre(
+                    genreRow.getLong("genre_id"),
                     genreRow.getString("genre_name"));
 
             log.info("Найден жанр: {} {}", genre.getId(), genre.getName());
@@ -49,5 +50,27 @@ public class GenreDbStorage implements GenreStorage {
             log.error("Жанр с идентификатором {} не найден.", id);
             throw new GenreNotFoundException(String.format("Жанр с идентификатором %d не найден.", id));
         }
+    }
+
+    @Override
+    public List<Genre> getFilmGenres(long filmId, List<Genre> genres) {
+        String sql = "INSERT INTO GENRE_MOVIE (movie_id, genre_id) VALUES ( ?, ? )";
+        genres.stream()
+                .map(Genre::getId)
+                .distinct()
+                .forEach((k) -> jdbcTemplate.update(sql, filmId, k));
+        return genres.stream()
+                .map(Genre::getId)
+                .distinct()
+                .map(this::getGenreById)
+                .filter(Optional::isPresent)
+                .map(Optional::get)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public void removeFilmGenres(long filmId) {
+        String sql = "DELETE FROM GENRE_MOVIE WHERE MOVIE_ID = ?";
+        jdbcTemplate.update(sql, filmId);
     }
 }

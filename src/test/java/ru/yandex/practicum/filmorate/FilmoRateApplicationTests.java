@@ -36,7 +36,7 @@ import static org.junit.jupiter.api.Assertions.*;
 @SpringBootTest
 @ActiveProfiles("test")
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
-@AutoConfigureTestDatabase //(replace = AutoConfigureTestDatabase.Replace.NONE)
+@AutoConfigureTestDatabase
 @Sql(scripts = "classpath:testschema.sql", executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
 class FilmoRateApplicationTests {
 
@@ -65,7 +65,7 @@ class FilmoRateApplicationTests {
     @Test
     public void testFindUserById() {
 
-        Optional<User> userOptional = userStorage.getUserById(1);
+        Optional<User> userOptional = userService.getUserById(1);
 
         assertThat(userOptional)
                 .isPresent()
@@ -75,7 +75,7 @@ class FilmoRateApplicationTests {
     @Test
     public void testFailFindUserWrongId() {
         final UserNotFoundException exception = assertThrows(UserNotFoundException.class,
-                () -> userStorage.getUserById(5));
+                () -> userService.getUserById(5));
         assertEquals("Пользователь с идентификатором 5 не найден.", exception.getMessage());
     }
 
@@ -83,13 +83,13 @@ class FilmoRateApplicationTests {
     @DisplayName("ID is negative")
     public void failUserGetByIncorrectId() {
         final IncorrectIdException exception = assertThrows(IncorrectIdException.class,
-                () -> userStorage.getUserById(-5));
+                () -> userService.getUserById(-5));
         assertEquals("Некорректный id  - -5", exception.getMessage());
     }
 
     @Test
     public void testFindAll() {
-        List<User> users = userStorage.findAll();
+        List<User> users = userService.findAll();
         assertEquals(3, users.size(), "Количество пользователей не совпадает");
     }
 
@@ -101,8 +101,8 @@ class FilmoRateApplicationTests {
                 .name("pasha")
                 .birthday(LocalDate.of(1989, 05, 29))
                 .build();
-        userStorage.create(user);
-        Optional<User> userOptional = userStorage.getUserById(4);
+        userService.create(user);
+        Optional<User> userOptional = userService.getUserById(4);
 
         assertThat(userOptional)
                 .isPresent()
@@ -119,8 +119,8 @@ class FilmoRateApplicationTests {
                 .name("")
                 .birthday(LocalDate.of(1989, 11, 6))
                 .build();
-                userStorage.create(user);
-        Optional<User> foundUser = userStorage.getUserById(4);
+        userService.create(user);
+        Optional<User> foundUser = userService.getUserById(4);
         assertThat(foundUser)
                 .isPresent()
                 .hasValueSatisfying(userGet ->
@@ -136,8 +136,8 @@ class FilmoRateApplicationTests {
                 .name("olya")
                 .birthday(LocalDate.of(1989, 11, 6))
                 .build();
-        userStorage.update(userUpdated);
-        Optional<User> foundUser = userStorage.getUserById(1);
+        userService.update(userUpdated);
+        Optional<User> foundUser = userService.getUserById(1);
         assertThat(foundUser)
                 .isPresent()
                 .hasValueSatisfying(userGet ->
@@ -155,7 +155,7 @@ class FilmoRateApplicationTests {
                 .birthday(LocalDate.of(1989,6,11))
                 .build();
         final UserNotFoundException exception = assertThrows(UserNotFoundException.class,
-                () -> userStorage.update(update));
+                () -> userService.update(update));
         assertEquals("Пользователь с идентификатором 123 не найден.", exception.getMessage());
     }
 
@@ -195,7 +195,7 @@ class FilmoRateApplicationTests {
     public void failAddFriendByIdNotFound() {
         final UserNotFoundException exception = assertThrows(UserNotFoundException.class,
                 () -> userService.addFriend(1, 5));
-        assertEquals("Пользователь с id 5 не найден.", exception.getMessage());
+        assertEquals("Пользователь с идентификатором 5 не найден.", exception.getMessage());
     }
 
     @Test
@@ -229,9 +229,9 @@ class FilmoRateApplicationTests {
                 .rate(5)
                 .mpa(new Mpa(3, ""))
                 .build();
-        filmStorage.create(film);
+        filmService.create(film);
 
-        Optional<Film> filmFound = filmStorage.getById(4);
+        Optional<Film> filmFound = filmService.getById(4);
         assertThat(filmFound)
                 .isPresent()
                 .hasValueSatisfying(filmNew -> assertThat(filmNew).hasFieldOrPropertyWithValue("id", 4L));
@@ -239,7 +239,7 @@ class FilmoRateApplicationTests {
 
     @Test
     @DisplayName("film released on 28/12/1895")
-    public void successCreateFilmOld() throws SQLException {
+    public void successCreateFilmOld() {
         Film film = Film.builder()
                 .name("four")
                 .description("tralala")
@@ -248,8 +248,8 @@ class FilmoRateApplicationTests {
                 .rate(5)
                 .mpa(new Mpa(4, ""))
                 .build();
-        filmStorage.create(film);
-        Optional<Film> filmFound = filmStorage.getById(4);
+        filmService.create(film);
+        Optional<Film> filmFound = filmService.getById(4);
         assertThat(filmFound)
                 .isPresent()
                 .hasValueSatisfying(filmNew ->
@@ -257,7 +257,7 @@ class FilmoRateApplicationTests {
     }
 
     @Test
-    public void successUpdateFilm() throws SQLException {
+    public void successUpdateFilm() {
         Film update = Film.builder()
                 .id(1)
                 .name("nameNew")
@@ -267,8 +267,8 @@ class FilmoRateApplicationTests {
                 .rate(1)
                 .mpa(new Mpa(1,""))
                 .build();
-        filmStorage.update(update);
-        Optional<Film> filmFound = filmStorage.getById(1);
+        filmService.update(update);
+        Optional<Film> filmFound = filmService.getById(1);
         filmFound.ifPresent(film -> assertEquals(update, film, "Фильмы не совпадают."));
     }
 
@@ -285,7 +285,7 @@ class FilmoRateApplicationTests {
                 .mpa(new Mpa(1,""))
                 .build();
         final FilmNotFoundException exception = assertThrows(FilmNotFoundException.class,
-                () -> filmStorage.update(update));
+                () -> filmService.update(update));
         assertEquals("Фильм с идентификатором 123 не найден.", exception.getMessage());
     }
 
@@ -303,13 +303,13 @@ class FilmoRateApplicationTests {
                 .mpa(new Mpa(1,""))
                 .build();
         final ValidationException exception = assertThrows(ValidationException.class,
-                () -> filmStorage.update(update));
+                () -> filmService.update(update));
         assertEquals("Дата релиза фильма не может быть раньше 28 декабря 1895 года.", exception.getMessage());
     }
 
     @Test
-    public void shouldGetById() throws SQLException {
-        Optional<Film> filmFound = filmStorage.getById(2);
+    public void shouldGetById() {
+        Optional<Film> filmFound = filmService.getById(2);
         assertThat(filmFound)
                 .isPresent()
                 .hasValueSatisfying(filmNew ->
@@ -320,21 +320,21 @@ class FilmoRateApplicationTests {
     @DisplayName("ID equals 0")
     public void failGetByZeroId() {
         final IncorrectIdException exception = assertThrows(IncorrectIdException.class,
-                () -> filmStorage.getById(0));
+                () -> filmService.getById(0));
         assertEquals("Некорректный id  - 0", exception.getMessage());
     }
 
     @Test
     public void failGetByNegativeId() {
         final IncorrectIdException exception = assertThrows(IncorrectIdException.class,
-                () -> filmStorage.getById(-5));
+                () -> filmService.getById(-5));
         assertEquals("Некорректный id  - " + (-5), exception.getMessage());
     }
 
     @Test
     public void failGetByIdNotFound() {
         final FilmNotFoundException exception = assertThrows(FilmNotFoundException.class,
-                () -> filmStorage.getById(10));
+                () -> filmService.getById(10));
         assertEquals("Фильм с идентификатором 10 не найден.", exception.getMessage());
     }
 

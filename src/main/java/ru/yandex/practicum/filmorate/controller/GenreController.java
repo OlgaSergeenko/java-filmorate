@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import ru.yandex.practicum.filmorate.model.Genre;
+import ru.yandex.practicum.filmorate.service.GenreService;
 import ru.yandex.practicum.filmorate.storage.genre.GenreStorage;
 
 import java.util.List;
@@ -16,15 +17,15 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class GenreController {
 
-    private final GenreStorage genreStorage;
+    private final GenreService genreService;
 
     @GetMapping
     public List<Genre> findAll() {
-        return genreStorage.getGenres();
+        return genreService.getGenres();
     }
 
     @GetMapping("/{id}")
     public Optional<Genre> findById(@PathVariable("id") int id) {
-        return genreStorage.getGenreById(id);
+        return genreService.getGenreById(id);
     }
 }

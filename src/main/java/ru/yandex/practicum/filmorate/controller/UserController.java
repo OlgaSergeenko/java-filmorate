@@ -3,7 +3,6 @@ package ru.yandex.practicum.filmorate.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.stereotype.Component;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.service.UserService;
@@ -19,32 +18,30 @@ import java.util.Set;
 public class UserController {
 
     private final UserService userService;
-    private final UserStorage userStorage;
 
     @Autowired
-    public UserController(UserService userService, @Autowired @Qualifier("userDbStorage") UserStorage userStorage) {
+    public UserController(UserService userService) {
         this.userService = userService;
-        this.userStorage = userStorage;
     }
 
     @GetMapping
     public List<User> findAll() {
-       return userStorage.findAll();
+       return userService.findAll();
     }
 
     @PostMapping
     public User create(@Valid @RequestBody User user) {
-        return userStorage.create(user);
+        return userService.create(user);
     }
 
     @PutMapping
     public User update(@Valid @RequestBody User user) {
-        return userStorage.update(user);
+        return userService.update(user);
     }
 
     @GetMapping("/{id}")
     public Optional<User> getUserById(@PathVariable("id") long userId) {
-        return userStorage.getUserById(userId);
+        return userService.getUserById(userId);
     }
 
     @PutMapping("/{id}/friends/{friendId}")

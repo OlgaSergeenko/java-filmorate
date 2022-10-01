@@ -7,6 +7,7 @@ To see the diagram online use this [link](https://drawsql.app/teams/new-13/diagr
 
 ![Database](drawSQL-filmorate.v3.png)
 
+
 #### Пример запроса на получение списка юзеров:
 SELECT * </br>
 FROM user

@@ -16,31 +16,29 @@ import java.util.Set;
 @RequestMapping("/films")
 public class FilmController{
     private final FilmService filmService;
-    private final FilmStorage filmStorage;
 
-    public FilmController(FilmService filmService, @Qualifier("filmDbStorage") FilmStorage filmStorage) {
+    public FilmController(FilmService filmService) {
         this.filmService = filmService;
-        this.filmStorage = filmStorage;
     }
 
     @GetMapping
     public List<Film> findAll() {
-        return filmStorage.findAll();
+        return filmService.findAll();
     }
 
     @PostMapping
     public Film create(@Valid @RequestBody Film film) {
-       return filmStorage.create(film);
+       return filmService.create(film);
     }
 
     @PutMapping
     public Film update(@Valid @RequestBody Film film) {
-        return filmStorage.update(film);
+        return filmService.update(film);
     }
 
     @GetMapping("/{id}")
     public Optional<Film> getById(@PathVariable("id") long filmId) {
-        return filmStorage.getById(filmId);
+        return filmService.getById(filmId);
     }
 
     @PutMapping("/{id}/like/{userId}")

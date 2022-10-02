@@ -10,11 +10,20 @@ import java.util.Set;
 public interface UserStorage {
 
     User create(User user);
+
     User update(User user);
+
     Optional<User> getUserById(long userId);
+
     List<User> findAll();
+
     Set<User> addFriend(long userId, long friendId);
+
     Set<User> getAllFriends(long userId);
+
     Set<User> removeFriend(long userId, long friendId);
+
     Set<User> getCommonFriends(long userId, long otherUserId);
+
+    List<User> removeUser(long id);
 }

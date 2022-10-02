@@ -67,6 +67,13 @@ public class UserService {
         return userStorage.getCommonFriends(userId, otherUserId);
     }
 
+    public List<User> removeUser(long id) {
+        validateId(id);
+        getUserById(id);
+        return userStorage.removeUser(id);
+    }
+
+
     private void validateId(long id) {
         if (id <= 0) {
             throw new IncorrectIdException(String.format("Некорректный id  - %d", id));
@@ -80,4 +87,3 @@ public class UserService {
         }
     }
 }
-

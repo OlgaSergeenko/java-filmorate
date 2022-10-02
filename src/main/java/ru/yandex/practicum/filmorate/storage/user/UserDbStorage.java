@@ -135,4 +135,11 @@ public class UserDbStorage implements UserStorage {
         }
         return commonFriends;
     }
+
+    public List<User> removeUser(long id) {
+        String sql = "DELETE FROM APP_USER WHERE user_id = ?";
+        jdbcTemplate.update(sql, id);
+        return findAll();
+    }
 }
+

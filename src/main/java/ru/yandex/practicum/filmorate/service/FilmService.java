@@ -79,6 +79,12 @@ public class FilmService {
         return filmStorage.removeLike(filmId, userId);
     }
 
+    public List<Film> removeFilm (long id) {
+        validateId(id);
+        filmStorage.getById(id);
+        return filmStorage.removeFilm(id);
+    }
+
     public List<Film> getPopularFilm(int count) {
         return filmStorage.getPopularFilm(count);
     }

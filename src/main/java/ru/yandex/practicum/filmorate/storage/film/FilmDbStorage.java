@@ -67,10 +67,10 @@ public class FilmDbStorage implements FilmStorage {
 
     @Override
     public Optional<Film> getById(long id) {
-        String GET_FILM_BY_ID = "SELECT * " +
+        String sql = "SELECT * " +
                 "FROM movie " +
                 "WHERE movie_id = ?";
-        SqlRowSet filmsRows = jdbcTemplate.queryForRowSet(GET_FILM_BY_ID, id);
+        SqlRowSet filmsRows = jdbcTemplate.queryForRowSet(sql, id);
         if (filmsRows.next()) {
             Film film = makeFilm(filmsRows);
 

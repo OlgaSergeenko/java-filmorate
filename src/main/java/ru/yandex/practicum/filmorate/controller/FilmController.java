@@ -61,10 +61,13 @@ public class FilmController{
 
 
     @GetMapping("/director/{id}")
-    public List<Film> getFilmByDirectorSortParam(@PathVariable long id, @RequestParam String sortBy){
+    public List<Film> getFilmByDirectorSortParam(@PathVariable long id, @RequestParam String sortBy) {
         return filmService.getFilmByDirectorSortParam(id, sortBy);
+    }
+
     @DeleteMapping("/{id}")
     public void removeFilm (@PathVariable("id") long filmId) {
         filmService.removeFilm(filmId);
     }
 }
+

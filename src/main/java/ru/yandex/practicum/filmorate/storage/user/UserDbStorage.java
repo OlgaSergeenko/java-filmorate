@@ -112,11 +112,10 @@ public class UserDbStorage implements UserStorage {
         return friends;
     }
 
-    public Set<User> removeFriend(long userId, long friendId) {
+    public void removeFriend(long userId, long friendId) {
         String sql = "DELETE FROM USER_FRIEND " +
                 "WHERE user_id = ? AND friend_id = ?";
         jdbcTemplate.update(sql, userId, friendId);
-        return getAllFriends(userId);
     }
 
     public Set<User> getCommonFriends(long userId, long otherUserId) {
@@ -136,10 +135,9 @@ public class UserDbStorage implements UserStorage {
         return commonFriends;
     }
 
-    public List<User> removeUser(long id) {
+    public void removeUser(long id) {
         String sql = "DELETE FROM APP_USER WHERE user_id = ?";
         jdbcTemplate.update(sql, id);
-        return findAll();
     }
 }
 

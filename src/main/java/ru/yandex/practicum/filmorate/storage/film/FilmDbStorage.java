@@ -173,16 +173,14 @@ public class FilmDbStorage implements FilmStorage {
         return likes;
     }
 
-    public Set<Long> removeLike(long filmId, long userId) {
+    public void removeLike(long filmId, long userId) {
         String sql = "DELETE FROM MOVIE_LIKES " +
                 "WHERE MOVIE_ID = ? AND USER_ID = ?";
         jdbcTemplate.update(sql, filmId, userId);
-        return getAllFilmLikes(filmId);
     }
 
-    public List<Film> removeFilm (long id) {
+    public void removeFilm (long id) {
         String sql = "DELETE FROM MOVIE WHERE movie_id = ?";
         jdbcTemplate.update(sql, id);
-        return findAll();
     }
 }

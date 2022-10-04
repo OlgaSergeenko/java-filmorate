@@ -49,9 +49,9 @@ public class UserController {
     }
 
     @DeleteMapping("/{id}/friends/{friendId}")
-    public Set<User> removeFriend(@PathVariable("id") long userId,
+    public void removeFriend(@PathVariable("id") long userId,
                                   @PathVariable("friendId") long friendId) {
-        return userService.removeFriend(userId, friendId);
+        userService.removeFriend(userId, friendId);
     }
 
     @GetMapping("/{id}/friends")
@@ -66,7 +66,7 @@ public class UserController {
     }
 
     @DeleteMapping ("/{id}")
-    public List<User> removeUser(@PathVariable("id") long userId) {
-        return userService.removeUser(userId);
+    public void removeUser(@PathVariable("id") long userId) {
+        userService.removeUser(userId);
     }
 }

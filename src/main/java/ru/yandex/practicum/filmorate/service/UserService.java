@@ -53,10 +53,10 @@ public class UserService {
         return userStorage.getAllFriends(userId);
     }
 
-    public Set<User> removeFriend(long userId, long friendId) {
+    public void removeFriend(long userId, long friendId) {
         validateId(userId);
         validateId(friendId);
-        return userStorage.removeFriend(userId, friendId);
+        userStorage.removeFriend(userId, friendId);
     }
 
     public Set<User> getCommonFriends(long userId, long otherUserId) {
@@ -67,10 +67,10 @@ public class UserService {
         return userStorage.getCommonFriends(userId, otherUserId);
     }
 
-    public List<User> removeUser(long id) {
+    public void removeUser(long id) {
         validateId(id);
         getUserById(id);
-        return userStorage.removeUser(id);
+        userStorage.removeUser(id);
     }
 
 

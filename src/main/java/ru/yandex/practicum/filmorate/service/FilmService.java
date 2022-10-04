@@ -29,7 +29,7 @@ public class FilmService {
         validateReleaseDate(film);
         filmStorage.create(film);
         if (film.getGenres() != null) {
-            film.setGenres(genreStorage.getFilmGenres(film.getId(), film.getGenres()));
+            film.setGenres(genreStorage.addFilmGenres(film));
         }
         Optional<Mpa> rating = mpaStorage.getMpaById(film.getMpa().getId());
         rating.ifPresent(film::setMpa);
@@ -45,7 +45,7 @@ public class FilmService {
         Optional<Mpa> mpa = mpaStorage.getMpaById(film.getMpa().getId());
         mpa.ifPresent(film::setMpa);
         if (film.getGenres() != null) {
-            film.setGenres(genreStorage.getFilmGenres(film.getId(), film.getGenres()));
+            film.setGenres(genreStorage.addFilmGenres(film));
         }
         return film;
     }

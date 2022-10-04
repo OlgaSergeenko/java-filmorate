@@ -10,7 +10,6 @@ import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.exception.FilmNotFoundException;
 import ru.yandex.practicum.filmorate.exception.MpaNotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
-import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.Mpa;
 import ru.yandex.practicum.filmorate.storage.genre.GenreStorage;
 import ru.yandex.practicum.filmorate.storage.mpa.MpaStorage;
@@ -18,7 +17,6 @@ import ru.yandex.practicum.filmorate.storage.mpa.MpaStorage;
 import java.sql.*;
 import java.sql.Date;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Component
@@ -92,7 +90,7 @@ public class FilmDbStorage implements FilmStorage {
                 filmsRows.getInt("duration"),
                 filmsRows.getInt("rate"),
                 getMpa(filmsRows.getLong("mpa_id")),
-                setFilmGenres(filmsRows.getLong("movie_id")));
+                genreStorage.getFilmGenres(filmsRows.getLong("movie_id")));
     }
 
     private Mpa getMpa(long mpaId) {
@@ -102,24 +100,6 @@ public class FilmDbStorage implements FilmStorage {
             throw new MpaNotFoundException(String.format("Рейтинг с идентификатором %d не найден.", mpaId));
         }
         return mpa.get();
-    }
-
-    private List<Genre> setFilmGenres(long filmId) {
-        String sql = "SELECT m.movie_id, g2.genre_id, g2.genre_name\n" +
-                "FROM MOVIE m\n" +
-                "LEFT JOIN GENRE_MOVIE GM on m.movie_id = GM.movie_id\n" +
-                "JOIN genre g2 on g2.genre_id = GM.genre_id\n" +
-                "WHERE m.movie_id = ?";
-        SqlRowSet genresRows = jdbcTemplate.queryForRowSet(sql, filmId);
-        List<Integer> ids = new ArrayList<>();
-        while (genresRows.next()) {
-            ids.add(genresRows.getInt("genre_id"));
-        }
-        return ids.stream()
-                .map(genreStorage::getGenreById)
-                .filter(Optional::isPresent)
-                .map(Optional::get)
-                .collect(Collectors.toList());
     }
 
     @Override
@@ -138,7 +118,7 @@ public class FilmDbStorage implements FilmStorage {
     }
 
     public List<Film> getPopularFilm(int count) {
-        String sql = "SELECT m.movie_id, COUNT(ml.user_id)\n" +
+        String sql = "SELECT m.movie_id, m.movie_name, m.description, m.release_date, m.duration, m.rate, m.mpa_id " +
                 "FROM MOVIE m\n" +
                 "left join MOVIE_LIKES ml on m.movie_id = ml.movie_id\n" +
                 "left join APP_USER AU on ML.user_id = AU.user_id\n" +
@@ -148,8 +128,8 @@ public class FilmDbStorage implements FilmStorage {
         SqlRowSet popularRows = jdbcTemplate.queryForRowSet(sql, count);
         List<Film> films = new ArrayList<>();
         while (popularRows.next()) {
-            Optional<Film> film = getById(popularRows.getLong("movie_id"));
-            film.ifPresent(films::add);
+            Film film = makeFilm(popularRows);
+            films.add(film);
         }
         return films;
     }

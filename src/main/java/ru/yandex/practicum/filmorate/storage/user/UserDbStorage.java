@@ -101,13 +101,14 @@ public class UserDbStorage implements UserStorage {
 
     public Set<User> getAllFriends(long userId) {
         Set<User> friends = new HashSet<>();
-        String sql = "SELECT friend_id " +
-                "FROM USER_FRIEND " +
-                "WHERE user_id = ?";
+        String sql = "SELECT u.user_id, u.email, u.login, u.name, u.birthday " +
+                "FROM user_friend AS f " +
+                "JOIN app_user AS u ON f.friend_id = u.user_id " +
+                "WHERE f.user_id = ? ";
         SqlRowSet userRows = jdbcTemplate.queryForRowSet(sql, userId);
         while (userRows.next()) {
-            Optional<User> user = getUserById(userRows.getLong("friend_id"));
-            user.ifPresent(friends::add);
+            User user = makeUser(userRows);
+            friends.add(user);
         }
         return friends;
     }
@@ -120,18 +121,20 @@ public class UserDbStorage implements UserStorage {
     }
 
     public Set<User> getCommonFriends(long userId, long otherUserId) {
-        String sql = "SELECT friend_id\n" +
-                "FROM USER_FRIEND\n" +
-                "WHERE user_id = ?\n" +
-                "INTERSECT\n" +
-                "SELECT friend_id\n" +
-                "FROM USER_FRIEND\n" +
-                "WHERE user_id = ?";
+        String sql = "SELECT * FROM APP_USER " +
+                "WHERE USER_ID IN (" +
+                "   SELECT friend_id\n" +
+                "   FROM USER_FRIEND\n" +
+                "   WHERE user_id = ?\n" +
+                "   INTERSECT\n" +
+                "   SELECT friend_id\n" +
+                "   FROM USER_FRIEND\n" +
+                "   WHERE user_id = ?)";
         SqlRowSet friendsRow = jdbcTemplate.queryForRowSet(sql, userId, otherUserId);
         Set<User> commonFriends = new HashSet<>();
         while (friendsRow.next()) {
-            Optional<User> user = getUserById(friendsRow.getLong("friend_id"));
-            user.ifPresent(commonFriends::add);
+            User user = makeUser(friendsRow);
+            commonFriends.add(user);
         }
         return commonFriends;
     }

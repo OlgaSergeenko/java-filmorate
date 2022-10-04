@@ -192,9 +192,15 @@ public class FilmDbStorage implements FilmStorage {
         if (film.getDirectors() == null) {
             return;
         }
-        String sql = "INSERT INTO movie_director(movie_id,director_id) " + "values(?,?)";
-        film.getDirectors().stream().distinct()
-                .forEach(director -> jdbcTemplate.update(sql, film.getId(), director.getId()));
+        List<Long> ids = new ArrayList<>(List.of(film.getId()));
+         ids.addAll(film.getDirectors().stream().map(Director::getId).distinct().collect(Collectors.toList()));
+        String values = String.join(",", Collections.nCopies(ids.size() - 1, "?"));
+        String sql = "INSERT INTO movie_director(movie_id,director_id) " +
+                "(SELECT m.movie_id, d.director_id " +
+                "FROM movie AS m " +
+                "JOIN director AS d ON m.movie_id=? " +
+                "WHERE d.director_id IN (" + values + "))";
+        jdbcTemplate.update(sql, ids.toArray());
     }
 
     private void deleteMovieDirector(Film film) {

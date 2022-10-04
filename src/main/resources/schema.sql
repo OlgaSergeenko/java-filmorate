@@ -42,22 +42,22 @@ CREATE TABLE IF NOT EXISTS GENRE
 
 CREATE TABLE IF NOT EXISTS GENRE_MOVIE
 (
-    movie_id integer REFERENCES movie (movie_id),
+    movie_id integer REFERENCES movie (movie_id) ON DELETE CASCADE,
     genre_id integer REFERENCES genre (genre_id),
     CONSTRAINT movie_genre_pk primary key (movie_id, genre_id)
 );
 
 CREATE TABLE IF NOT EXISTS USER_FRIEND
 (
-    user_id   integer REFERENCES app_user (user_id),
-    friend_id integer REFERENCES app_user (user_id),
+    user_id   integer REFERENCES app_user (user_id) ON DELETE CASCADE,
+    friend_id integer REFERENCES app_user (user_id) ON DELETE CASCADE,
     CONSTRAINT user_friend_pk primary key (user_id, friend_id)
 );
 
 CREATE TABLE IF NOT EXISTS MOVIE_LIKES
 (
-    movie_id integer REFERENCES MOVIE (movie_id),
-    user_id  integer REFERENCES app_user (user_id),
+    movie_id integer REFERENCES MOVIE (movie_id) ON DELETE CASCADE,
+    user_id  integer REFERENCES app_user (user_id) ON DELETE CASCADE,
     CONSTRAINT movie_user_pk primary key (movie_id, user_id)
 );
 
@@ -88,3 +88,5 @@ VALUES ('G'),
        ('PG-13'),
        ('R'),
        ('NC-17');
+
+

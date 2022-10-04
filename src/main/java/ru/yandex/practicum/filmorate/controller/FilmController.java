@@ -1,16 +1,20 @@
 package ru.yandex.practicum.filmorate.controller;
 
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.exception.IncorrectParameterException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.service.FilmService;
 
 import javax.validation.Valid;
+import javax.validation.constraints.Positive;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
 @RestController
+@Slf4j
 @RequestMapping("/films")
 public class FilmController{
     private final FilmService filmService;
@@ -68,6 +72,13 @@ public class FilmController{
     @DeleteMapping("/{id}")
     public void removeFilm (@PathVariable("id") long filmId) {
         filmService.removeFilm(filmId);
+    }
+
+    @GetMapping("/common")
+    public List<Film> getCommonFilms(@RequestParam @Positive long userId,
+            @RequestParam @Positive long friendId) {
+        log.info("GET-request at /films/common: userId={}, friendId={}", userId, friendId);
+        return filmService.getCommonFilms(userId, friendId);
     }
 }
 

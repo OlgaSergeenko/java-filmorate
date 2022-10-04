@@ -241,4 +241,21 @@ public class FilmDbStorage implements FilmStorage {
         }
         return films;
     }
+    
+    public List<Film> getCommonFilms(long userId, long friendId) {
+        String sql = "SELECT * FROM MOVIE " +
+                "INNER JOIN MOVIE_LIKES ML on MOVIE.MOVIE_ID = ML.MOVIE_ID " +
+                "WHERE ML.USER_ID = 1 AND ML.MOVIE_ID in " +
+                "(SELECT ML.MOVIE_ID FROM MOVIE_LIKES ML WHERE USER_ID = 2)";
+        List<Film> films = new ArrayList<>();
+        log.info("Searching for common films...");
+        SqlRowSet filmRow = jdbcTemplate.queryForRowSet(sql);
+        while (filmRow.next()) {
+            Film film = makeFilm(filmRow);
+            log.info("Film found: {}", film);
+            films.add(film);
+        }
+        log.debug("Common films found: {}", films.size());
+        return films;
+    }
 }

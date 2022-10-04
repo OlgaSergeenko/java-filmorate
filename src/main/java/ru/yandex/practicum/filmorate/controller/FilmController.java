@@ -6,7 +6,6 @@ import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.exception.IncorrectParameterException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.service.FilmService;
-import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 
 import javax.validation.Valid;
 import javax.validation.constraints.Positive;
@@ -31,7 +30,7 @@ public class FilmController{
 
     @PostMapping
     public Film create(@Valid @RequestBody Film film) {
-       return filmService.create(film);
+        return filmService.create(film);
     }
 
     @PutMapping
@@ -51,9 +50,9 @@ public class FilmController{
     }
 
     @DeleteMapping("/{id}/like/{userId}")
-    public Set<Long> removeLike(@PathVariable("id") long filmId,
+    public void removeLike(@PathVariable("id") long filmId,
                                 @PathVariable("userId") long userId) {
-        return filmService.removeLike(filmId, userId);
+        filmService.removeLike(filmId, userId);
     }
 
     @GetMapping("/popular")
@@ -63,6 +62,10 @@ public class FilmController{
         }
         return filmService.getPopularFilm(count);
     }
+
+    @DeleteMapping("/{id}")
+    public void removeFilm (@PathVariable("id") long filmId) {
+        filmService.removeFilm(filmId);
 
     @GetMapping("/common")
     public List<Film> getCommonFilms(@RequestParam @Positive long userId,

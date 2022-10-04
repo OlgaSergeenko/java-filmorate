@@ -21,6 +21,7 @@ import ru.yandex.practicum.filmorate.storage.mpa.MpaStorage;
 import java.sql.*;
 import java.sql.Date;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Component
@@ -98,7 +99,7 @@ public class FilmDbStorage implements FilmStorage {
                 filmsRows.getInt("duration"),
                 filmsRows.getInt("rate"),
                 getMpa(filmsRows.getLong("mpa_id")),
-                genreStorage.getFilmGenres(filmsRows.getLong("movie_id")));
+                genreStorage.getFilmGenres(filmsRows.getLong("movie_id")),
                 findMovieDirector(filmsRows.getInt("movie_id")));
     }
 
@@ -178,7 +179,7 @@ public class FilmDbStorage implements FilmStorage {
             return;
         }
         List<Long> ids = new ArrayList<>(List.of(film.getId()));
-         ids.addAll(film.getDirectors().stream().map(Director::getId).distinct().collect(Collectors.toList()));
+        ids.addAll(film.getDirectors().stream().map(Director::getId).distinct().collect(Collectors.toList()));
         String values = String.join(",", Collections.nCopies(ids.size() - 1, "?"));
         String sql = "INSERT INTO movie_director(movie_id,director_id) " +
                 "(SELECT m.movie_id, d.director_id " +

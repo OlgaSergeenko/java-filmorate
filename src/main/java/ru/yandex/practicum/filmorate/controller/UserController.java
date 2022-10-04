@@ -2,11 +2,9 @@ package ru.yandex.practicum.filmorate.controller;
 
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.service.UserService;
-import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
 import javax.validation.Valid;
 import java.util.List;
@@ -26,7 +24,7 @@ public class UserController {
 
     @GetMapping
     public List<User> findAll() {
-       return userService.findAll();
+        return userService.findAll();
     }
 
     @PostMapping
@@ -51,9 +49,9 @@ public class UserController {
     }
 
     @DeleteMapping("/{id}/friends/{friendId}")
-    public Set<User> removeFriend(@PathVariable("id") long userId,
-                               @PathVariable("friendId") long friendId) {
-        return userService.removeFriend(userId, friendId);
+    public void removeFriend(@PathVariable("id") long userId,
+                                  @PathVariable("friendId") long friendId) {
+        userService.removeFriend(userId, friendId);
     }
 
     @GetMapping("/{id}/friends")
@@ -61,9 +59,14 @@ public class UserController {
         return userService.getAllFriends(userId);
     }
 
-   @GetMapping("/{id}/friends/common/{otherId}")
+    @GetMapping("/{id}/friends/common/{otherId}")
     public Set<User> getCommonFriends(@PathVariable("id") long userId,
-                                       @PathVariable("otherId")long otherUserId) {
+                                      @PathVariable("otherId")long otherUserId) {
         return userService.getCommonFriends(userId, otherUserId);
+    }
+
+    @DeleteMapping ("/{id}")
+    public void removeUser(@PathVariable("id") long userId) {
+        userService.removeUser(userId);
     }
 }

@@ -73,12 +73,18 @@ public class FilmService {
         return filmStorage.getAllFilmLikes(filmId);
     }
 
-    public Set<Long> removeLike(long filmId, long userId) {
+    public void removeLike(long filmId, long userId) {
         validateId(filmId);
         validateId(userId);
         filmStorage.getById(filmId);
         userStorage.getUserById(userId);
-        return filmStorage.removeLike(filmId, userId);
+        filmStorage.removeLike(filmId, userId);
+    }
+
+    public void removeFilm (long id) {
+        validateId(id);
+        filmStorage.getById(id);
+        filmStorage.removeFilm(id);
     }
 
     public List<Film> getPopularFilm(int count) {

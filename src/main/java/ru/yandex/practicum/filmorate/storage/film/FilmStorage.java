@@ -24,5 +24,7 @@ public interface FilmStorage {
     Set<Long> removeLike(long filmId, long userId);
 
     List<Film> getPopularFilm(int count);
+
+    List<Film> getCommonFilms(long userId, long friendId);
 }
 

@@ -1,5 +1,6 @@
 package ru.yandex.practicum.filmorate.controller;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.exception.IncorrectParameterException;
@@ -8,11 +9,13 @@ import ru.yandex.practicum.filmorate.service.FilmService;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 
 import javax.validation.Valid;
+import javax.validation.constraints.Positive;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
 @RestController
+@Slf4j
 @RequestMapping("/films")
 public class FilmController{
     private final FilmService filmService;
@@ -59,5 +62,12 @@ public class FilmController{
             throw new IncorrectParameterException("count");
         }
         return filmService.getPopularFilm(count);
+    }
+
+    @GetMapping("/common")
+    public List<Film> getCommonFilms(@RequestParam @Positive long userId,
+            @RequestParam @Positive long friendId) {
+        log.info("GET-request at /films/common: userId={}, friendId={}", userId, friendId);
+        return filmService.getCommonFilms(userId, friendId);
     }
 }

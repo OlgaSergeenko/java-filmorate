@@ -36,7 +36,7 @@ public class FilmService {
         return film;
     }
 
-    public Film update(Film film){
+    public Film update(Film film) {
         validateReleaseDate(film);
         validateId(film.getId());
         filmStorage.getById(film.getId()); //наличие в бд
@@ -83,7 +83,12 @@ public class FilmService {
         return filmStorage.getPopularFilm(count);
     }
 
-    private void validateId (long id) {
+    public List<Film> getCommonFilms(long userId, long friendId) {
+        log.debug("Search for common films: userId={}, friendId={}", userId, friendId);
+        return filmStorage.getCommonFilms(userId, friendId);
+    }
+
+    private void validateId(long id) {
         if (id <= 0) {
             throw new IncorrectIdException(String.format("Некорректный id  - %d", id));
         }

@@ -3,6 +3,8 @@ package ru.yandex.practicum.filmorate.service;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestParam;
 import ru.yandex.practicum.filmorate.exception.IncorrectIdException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
@@ -71,12 +73,18 @@ public class FilmService {
         return filmStorage.getAllFilmLikes(filmId);
     }
 
-    public Set<Long> removeLike(long filmId, long userId) {
+    public void removeLike(long filmId, long userId) {
         validateId(filmId);
         validateId(userId);
         filmStorage.getById(filmId);
         userStorage.getUserById(userId);
-        return filmStorage.removeLike(filmId, userId);
+        filmStorage.removeLike(filmId, userId);
+    }
+
+    public void removeFilm (long id) {
+        validateId(id);
+        filmStorage.getById(id);
+        filmStorage.removeFilm(id);
     }
 
     public List<Film> getPopularFilm(int count) {
@@ -94,5 +102,9 @@ public class FilmService {
             log.error("Релиз фильма ранее 28/12/1895");
             throw new ValidationException("Дата релиза фильма не может быть раньше 28 декабря 1895 года.");
         }
+    }
+
+    public List<Film> getFilmByDirectorSortParam(long id, String sortBy){
+        return filmStorage.getFilmByDirectorSortParam(id, sortBy);
     }
 }

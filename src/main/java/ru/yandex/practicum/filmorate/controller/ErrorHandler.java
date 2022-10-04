@@ -59,4 +59,10 @@ public class ErrorHandler {
     public String handleGenreNotFoundException (final GenreNotFoundException e) {
         return e.getMessage();
     }
+
+    @ExceptionHandler(DirectorNotFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public String handleDirectorNotFoundException(final DirectorNotFoundException e){
+        return e.getMessage();
+    }
 }

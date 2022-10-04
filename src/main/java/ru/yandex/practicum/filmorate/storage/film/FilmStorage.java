@@ -1,6 +1,8 @@
 package ru.yandex.practicum.filmorate.storage.film;
 
 
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestParam;
 import ru.yandex.practicum.filmorate.model.Film;
 
 import java.util.List;
@@ -21,8 +23,11 @@ public interface FilmStorage {
 
     Set<Long> getAllFilmLikes(long filmId);
 
-    Set<Long> removeLike(long filmId, long userId);
+    void removeLike(long filmId, long userId);
 
     List<Film> getPopularFilm(int count);
-}
 
+    List<Film> getFilmByDirectorSortParam(long id, String sortBy);
+
+    void removeFilm(long id);
+}

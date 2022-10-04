@@ -392,4 +392,82 @@ class FilmoRateApplicationTests {
         List<Mpa> mpas = mpaStorage.getMpas();
         assertEquals(5, mpas.size(), "Количество рейтингов MPA в базе неверное");
     }
+
+    @Test
+    public void shouldRemoveUser() {
+        userService.removeUser(1);
+        assertEquals(2, userService.findAll().size(), "Неверное количество юзеров при удалении.");
+    }
+
+    @Test
+    @DisplayName("ID равно 0")
+    public void failRemoveUserZeroId() {
+        final IncorrectIdException exception = assertThrows(IncorrectIdException.class,
+                () -> userService.removeUser(0));
+        assertEquals("Некорректный id  - 0", exception.getMessage());
+    }
+
+    @Test
+    @DisplayName("ID меньше 0")
+    public void failRemoveUserNevativeID() {
+        final IncorrectIdException exception = assertThrows(IncorrectIdException.class,
+                () -> userService.removeUser(-10));
+        assertEquals("Некорректный id  - -10", exception.getMessage());
+    }
+
+    @Test
+    public void failRemoveUserNotFound() {
+        final UserNotFoundException exception = assertThrows(UserNotFoundException.class,
+                () -> userService.removeUser(5));
+        assertEquals("Пользователь с идентификатором 5 не найден.", exception.getMessage());
+    }
+
+    @Test
+    @DisplayName("Удаление пользователя из друзей другого пользователя")
+    public void shouldRemoveFriendWhenRemoveUser() {
+        userService.addFriend(2, 1);
+        userService.addFriend(2, 3);
+        userService.removeUser(1);
+        assertEquals(1, userService.getAllFriends(2).size(),
+                "Неверное количество друзей при удалении.");
+    }
+
+    @Test
+    @DisplayName("Удаление лайков удаленного пользователя")
+    public void shouldRemoveLikeWhenRemoveUser() {
+        filmService.addLike(1,1);
+        filmService.addLike(1,2);
+        userService.removeUser(1);
+        assertEquals(1, filmService.getAllFilmLikes(1).size(),
+                "Неверное количество лайков при удалении.");
+    }
+
+    @Test
+    public void shouldRemoveFilm() {
+        filmService.removeFilm(1);
+        assertEquals(2, filmService.findAll().size(), "Неверное количество фильмов при удалении.");
+    }
+
+    @Test
+    @DisplayName("ID равно 0")
+    public void failRemoveFilmZeroId() {
+        final IncorrectIdException exception = assertThrows(IncorrectIdException.class,
+                () -> filmService.removeFilm(0));
+        assertEquals("Некорректный id  - 0", exception.getMessage());
+    }
+
+    @Test
+    @DisplayName("ID меньше 0")
+    public void failRemoveFilmNevativeID() {
+        final IncorrectIdException exception = assertThrows(IncorrectIdException.class,
+                () -> filmService.removeFilm(-10));
+        assertEquals("Некорректный id  - -10", exception.getMessage());
+    }
+
+    @Test
+    public void failRemoveFilmNotFound() {
+        final FilmNotFoundException exception = assertThrows(FilmNotFoundException.class,
+                () -> filmService.removeFilm(5));
+        assertEquals("Фильм с идентификатором 5 не найден.", exception.getMessage());
+    }
 }

@@ -125,10 +125,8 @@ public class FilmDbStorage implements FilmStorage {
     @Override
     public List<Film> findAll() {
         List<Film> films = new ArrayList<>();
-        String sql = "SELECT m.*, g.*\n" +
-                "FROM MOVIE m\n" +
-                "left join GENRE_MOVIE GM on m.movie_id = GM.movie_id\n" +
-                "join GENRE g on g.genre_id = GM.genre_id";
+        String sql = "SELECT m.*\n" +
+                "FROM MOVIE m";
         SqlRowSet filmRow = jdbcTemplate.queryForRowSet(sql);
         while (filmRow.next()) {
             Film film = makeFilm(filmRow);
@@ -166,7 +164,7 @@ public class FilmDbStorage implements FilmStorage {
         String sql = "SELECT au.user_id\n" +
                 "FROM APP_USER au\n" +
                 "join movie_likes ml on au.user_id = ml.user_id\n" +
-                "WHERE au.user_id = ?";
+                "WHERE ml.movie_id = ?";
         SqlRowSet likesRows = jdbcTemplate.queryForRowSet(sql, filmId);
         Set<Long> likes = new HashSet<>();
         while (likesRows.next()) {
@@ -175,10 +173,14 @@ public class FilmDbStorage implements FilmStorage {
         return likes;
     }
 
-    public Set<Long> removeLike(long filmId, long userId) {
+    public void removeLike(long filmId, long userId) {
         String sql = "DELETE FROM MOVIE_LIKES " +
                 "WHERE MOVIE_ID = ? AND USER_ID = ?";
         jdbcTemplate.update(sql, filmId, userId);
-        return getAllFilmLikes(filmId);
+    }
+
+    public void removeFilm (long id) {
+        String sql = "DELETE FROM MOVIE WHERE movie_id = ?";
+        jdbcTemplate.update(sql, id);
     }
 }

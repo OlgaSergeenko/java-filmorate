@@ -6,9 +6,13 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.rowset.SqlRowSet;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.exception.GenreNotFoundException;
+import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -53,24 +57,43 @@ public class GenreDbStorage implements GenreStorage {
     }
 
     @Override
-    public List<Genre> getFilmGenres(long filmId, List<Genre> genres) {
-        String sql = "INSERT INTO GENRE_MOVIE (movie_id, genre_id) VALUES ( ?, ? )";
-        genres.stream()
+    public List<Genre> addFilmGenres(Film film) {
+        List<Long> ids = new ArrayList<>(List.of(film.getId()));
+        ids.addAll(film.getGenres().stream()
                 .map(Genre::getId)
                 .distinct()
-                .forEach((k) -> jdbcTemplate.update(sql, filmId, k));
-        return genres.stream()
-                .map(Genre::getId)
-                .distinct()
-                .map(this::getGenreById)
-                .filter(Optional::isPresent)
-                .map(Optional::get)
-                .collect(Collectors.toList());
+                .collect(Collectors.toList()));
+        String values = String.join(",", Collections.nCopies(ids.size() - 1, "?"));
+        String sql = "INSERT INTO genre_movie (movie_id, genre_id) " +
+                "(SELECT m.movie_id, g.genre_id " +
+                "FROM movie AS m " +
+                "JOIN genre AS g ON m.movie_id = ? " +
+                "WHERE g.genre_id IN (" + values + "))";
+
+        jdbcTemplate.update(sql, ids.toArray());
+        return getFilmGenres(film.getId());
     }
 
     @Override
     public void removeFilmGenres(long filmId) {
         String sql = "DELETE FROM GENRE_MOVIE WHERE MOVIE_ID = ?";
         jdbcTemplate.update(sql, filmId);
+    }
+
+    @Override
+    public List<Genre> getFilmGenres(long filmId) {
+        String sql = "SELECT * FROM genre AS g" +
+                " JOIN genre_movie AS gm ON gm.genre_id = g.genre_id" +
+                " WHERE gm.movie_id = ? " +
+                "ORDER BY g.genre_id ASC";
+
+        return jdbcTemplate.query(sql, this::mapRowToGenre, filmId);
+    }
+
+    private Genre mapRowToGenre(ResultSet resultSet, int rowNum) throws SQLException {
+        return Genre.builder()
+                .id(resultSet.getLong("genre_id"))
+                .name(resultSet.getString("genre_name"))
+                .build();
     }
 }

@@ -3,6 +3,8 @@ package ru.yandex.practicum.filmorate.service;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestParam;
 import ru.yandex.practicum.filmorate.exception.IncorrectIdException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
@@ -29,7 +31,7 @@ public class FilmService {
         validateReleaseDate(film);
         filmStorage.create(film);
         if (film.getGenres() != null) {
-            film.setGenres(genreStorage.getFilmGenres(film.getId(), film.getGenres()));
+            film.setGenres(genreStorage.addFilmGenres(film));
         }
         Optional<Mpa> rating = mpaStorage.getMpaById(film.getMpa().getId());
         rating.ifPresent(film::setMpa);
@@ -45,7 +47,7 @@ public class FilmService {
         Optional<Mpa> mpa = mpaStorage.getMpaById(film.getMpa().getId());
         mpa.ifPresent(film::setMpa);
         if (film.getGenres() != null) {
-            film.setGenres(genreStorage.getFilmGenres(film.getId(), film.getGenres()));
+            film.setGenres(genreStorage.addFilmGenres(film));
         }
         return film;
     }
@@ -105,5 +107,9 @@ public class FilmService {
             log.error("Релиз фильма ранее 28/12/1895");
             throw new ValidationException("Дата релиза фильма не может быть раньше 28 декабря 1895 года.");
         }
+    }
+
+    public List<Film> getFilmByDirectorSortParam(long id, String sortBy){
+        return filmStorage.getFilmByDirectorSortParam(id, sortBy);
     }
 }

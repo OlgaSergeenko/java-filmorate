@@ -1,5 +1,18 @@
 package ru.yandex.practicum.filmorate.storage.film;
 
+import java.sql.Date;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataAccessException;
@@ -13,15 +26,9 @@ import ru.yandex.practicum.filmorate.exception.MpaNotFoundException;
 import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Mpa;
-import ru.yandex.practicum.filmorate.storage.director.DirectorDbStorage;
 import ru.yandex.practicum.filmorate.storage.director.DirectorStorage;
 import ru.yandex.practicum.filmorate.storage.genre.GenreStorage;
 import ru.yandex.practicum.filmorate.storage.mpa.MpaStorage;
-
-import java.sql.*;
-import java.sql.Date;
-import java.util.*;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Component
@@ -102,6 +109,19 @@ public class FilmDbStorage implements FilmStorage {
                 genreStorage.getFilmGenres(filmsRows.getLong("movie_id")),
                 findMovieDirector(filmsRows.getInt("movie_id")));
     }
+
+  private Film makeFilm(ResultSet filmsRows) throws SQLException {
+    return new Film(
+        filmsRows.getLong("movie_id"),
+        Objects.requireNonNull(filmsRows.getString("movie_name")),
+        Objects.requireNonNull(filmsRows.getString("description")),
+        Objects.requireNonNull(filmsRows.getDate("release_date")).toLocalDate(),
+        filmsRows.getInt("duration"),
+        filmsRows.getInt("rate"),
+        getMpa(filmsRows.getLong("mpa_id")),
+        genreStorage.getFilmGenres(filmsRows.getLong("movie_id")),
+        findMovieDirector(filmsRows.getInt("movie_id")));
+  }
 
     private Mpa getMpa(long mpaId) {
         Optional<Mpa> mpa = mpaStorage.getMpaById(mpaId);
@@ -241,7 +261,7 @@ public class FilmDbStorage implements FilmStorage {
         }
         return films;
     }
-    
+
     public List<Film> getCommonFilms(long userId, long friendId) {
         String sql = "SELECT * FROM MOVIE " +
                 "INNER JOIN MOVIE_LIKES ML on MOVIE.MOVIE_ID = ML.MOVIE_ID " +
@@ -257,5 +277,27 @@ public class FilmDbStorage implements FilmStorage {
         }
         log.debug("Common films found: {}", films.size());
         return films;
+    }
+
+    public List<Film> getRecommendedFilms(Long userRecommendedFor, List<Long> usersWithSameInterests) {
+        var sqlQuery = "SELECT f.movie_id, "
+            + "       f.movie_name, "
+            + "       f.description, "
+            + "       f.release_date, "
+            + "       f.rate, "
+            + "       f.duration, "
+            + "       f.mpa_id "
+            + "FROM MOVIE_LIKES l2 "
+            + "JOIN MOVIE f ON f.movie_id = l2.movie_id "
+            + "WHERE user_id IN (?) "
+            + "  AND l2.movie_id NOT IN "
+            + "    (SELECT l.movie_id "
+            + "     FROM MOVIE_LIKES l "
+            + "     WHERE user_id = ?)";
+
+        var usersWithSameInterestsIds = usersWithSameInterests.stream()
+            .map(String::valueOf)
+            .collect(Collectors.joining(","));
+        return jdbcTemplate.query(sqlQuery, (rs, rowNum) -> makeFilm(rs), usersWithSameInterestsIds, userRecommendedFor);
     }
 }

@@ -24,9 +24,10 @@ public class ReviewService {
         return reviewStorage.saveReview(review);
     }
 
-    public Review updateReview(Review review) {
-        filmStorage.getById(review.getFilmId());
-        userStorage.getUserById(review.getUserId());
+    public Review updateReview(Review requestReview) {
+        Review review = reviewStorage.getById(requestReview.getReviewId()).get();
+        review.setContent(requestReview.getContent());
+        review.setIsPositive(requestReview.getIsPositive());
 
         return reviewStorage.updateReview(review);
     }

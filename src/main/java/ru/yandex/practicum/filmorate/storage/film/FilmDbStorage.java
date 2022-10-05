@@ -13,7 +13,6 @@ import ru.yandex.practicum.filmorate.exception.MpaNotFoundException;
 import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Mpa;
-import ru.yandex.practicum.filmorate.storage.director.DirectorDbStorage;
 import ru.yandex.practicum.filmorate.storage.director.DirectorStorage;
 import ru.yandex.practicum.filmorate.storage.genre.GenreStorage;
 import ru.yandex.practicum.filmorate.storage.mpa.MpaStorage;
@@ -31,7 +30,6 @@ public class FilmDbStorage implements FilmStorage {
     private final JdbcTemplate jdbcTemplate;
     private final MpaStorage mpaStorage;
     private final GenreStorage genreStorage;
-
     private final DirectorStorage directorStorage;
 
     @Override
@@ -169,7 +167,7 @@ public class FilmDbStorage implements FilmStorage {
         jdbcTemplate.update(sql, filmId, userId);
     }
 
-    public void removeFilm (long id) {
+    public void removeFilm(long id) {
         String sql = "DELETE FROM MOVIE WHERE movie_id = ?";
         jdbcTemplate.update(sql, id);
     }
@@ -215,8 +213,8 @@ public class FilmDbStorage implements FilmStorage {
             if (sortBy.equals("year")) {
                 String sql = "SELECT * FROM movie WHERE movie_id IN" +
                         " (SELECT movie_id FROM movie_director WHERE director_id=?) ORDER BY release_date";
-                SqlRowSet sqlRowSet = jdbcTemplate.queryForRowSet(sql,id);
-                while (sqlRowSet.next()){
+                SqlRowSet sqlRowSet = jdbcTemplate.queryForRowSet(sql, id);
+                while (sqlRowSet.next()) {
                     Film film = makeFilm(sqlRowSet);
                     films.add(film);
                 }
@@ -227,21 +225,21 @@ public class FilmDbStorage implements FilmStorage {
                         " (SELECT movie_id FROM movie_director WHERE director_id=?)" +
                         "GROUP BY m.movie_id" +
                         " ORDER BY COUNT(ml.user_id) DESC";
-                SqlRowSet sqlRowSet = jdbcTemplate.queryForRowSet(sql,id);
-                while (sqlRowSet.next()){
+                SqlRowSet sqlRowSet = jdbcTemplate.queryForRowSet(sql, id);
+                while (sqlRowSet.next()) {
                     Film film = makeFilm(sqlRowSet);
                     films.add(film);
                 }
             }
-        } catch (DataAccessException e){
+        } catch (DataAccessException e) {
             throw new FilmNotFoundException(String.format("У режиссера с id %d фильмов нет", id));
         }
-        if(films.size() == 0){
+        if (films.size() == 0) {
             throw new FilmNotFoundException(String.format("У режиссера с id %d фильмов нет", id));
         }
         return films;
     }
-    
+
     public List<Film> getCommonFilms(long userId, long friendId) {
         String sql = "SELECT * FROM MOVIE " +
                 "INNER JOIN MOVIE_LIKES ML on MOVIE.MOVIE_ID = ML.MOVIE_ID " +
@@ -256,6 +254,81 @@ public class FilmDbStorage implements FilmStorage {
             films.add(film);
         }
         log.debug("Common films found: {}", films.size());
+        return films;
+    }
+
+    public List<Film> getFilmsByParam(String query, List<String> by) {
+        List<Film> films = new ArrayList<>();
+        switch (by.size()) {
+            case 1:
+                if (by.get(0).equals("title")) {
+                    films = searchByTitle(query);
+                } else if (by.get(0).equals("director")) {
+                    films = searchByDirector(query);
+                }
+                break;
+            case 2:
+                films = searchByTitleAndDirector(query);
+                break;
+            default:
+                throw new FilmNotFoundException("Фильмы по данному запросу не найдены.");
+        }
+        return films;
+    }
+
+    private List<Film> searchByTitle(String query) {
+        List<Film> films = new ArrayList<>();
+        String sql = "SELECT m.*, COUNT(ml.user_id)\n" +
+                "From MOVIE m\n" +
+                "left join MOVIE_LIKES ML on m.movie_id = ML.movie_id\n" +
+                "WHERE LOWER(m.movie_name) LIKE LOWER('%' || ? || '%')\n" +
+                "GROUP BY ml.movie_id\n" +
+                "ORDER BY COUNT(ml.user_id) DESC";
+        SqlRowSet filmRow = jdbcTemplate.queryForRowSet(sql, query);
+        while (filmRow.next()) {
+            Film film = makeFilm(filmRow);
+            log.info("Найден фильм: {}", film.getName());
+            films.add(film);
+        }
+        return films;
+    }
+
+    private List<Film> searchByDirector(String query) {
+        List<Film> films = new ArrayList<>();
+        String sql = "SELECT m.*, COUNT(ml.user_id)\n" +
+                "From MOVIE m\n" +
+                "left join MOVIE_LIKES ML on m.movie_id = ML.movie_id\n" +
+                "left join MOVIE_DIRECTOR MD on m.movie_id = MD.movie_id\n" +
+                "join DIRECTOR D on MD.director_id = D.DIRECTOR_ID\n" +
+                "WHERE LOWER(D.NAME) LIKE LOWER('%' || ? || '%')\n" +
+                "GROUP BY ml.movie_id\n" +
+                "ORDER BY COUNT(ml.user_id) DESC";
+        SqlRowSet filmRow = jdbcTemplate.queryForRowSet(sql, query);
+        while (filmRow.next()) {
+            Film film = makeFilm(filmRow);
+            log.info("Найден фильм: {}", film.getName());
+            films.add(film);
+        }
+        return films;
+    }
+
+    private List<Film> searchByTitleAndDirector(String query) {
+        List<Film> films = new ArrayList<>();
+        String sql = "SELECT m.*, COUNT(ml.user_id)\n" +
+                "From MOVIE m\n" +
+                "left join MOVIE_LIKES ML on m.movie_id = ML.movie_id\n" +
+                "left join MOVIE_DIRECTOR MD on m.movie_id = MD.movie_id\n" +
+                "left join DIRECTOR D on MD.director_id = D.DIRECTOR_ID\n" +
+                "WHERE LOWER(m.movie_name) LIKE LOWER('%' || ? || '%') OR\n" +
+                "LOWER(D.NAME) LIKE LOWER('%' || ? || '%')\n" +
+                "GROUP BY ml.movie_id\n" +
+                "ORDER BY COUNT(ml.user_id) DESC";
+        SqlRowSet filmRow = jdbcTemplate.queryForRowSet(sql, query, query);
+        while (filmRow.next()) {
+            Film film = makeFilm(filmRow);
+            log.info("Найден фильм: {}", film.getName());
+            films.add(film);
+        }
         return films;
     }
 }

@@ -32,4 +32,7 @@ public interface FilmStorage {
     void removeFilm(long id);
     
     List<Film> getCommonFilms(long userId, long friendId);
+
+    List<Film> getFilmsByParam(String query, List<String> by);
+
 }

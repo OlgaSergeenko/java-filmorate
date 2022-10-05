@@ -82,10 +82,9 @@ public class FilmController{
     }
 
     @GetMapping("/search")
-    public List<Film> getFilmsByParam(@RequestParam(required = false) String query,
-                                        @RequestParam(required = false) List<String> by) {
+    public List<Film> getFilmsByParam(@RequestParam String query,
+                                        @RequestParam List<String> by) {
         return filmService.getFilmsByParam(query, by);
     }
-    //search?query=крад&by=director,title}
 }
 

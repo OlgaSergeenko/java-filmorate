@@ -355,7 +355,7 @@ class FilmoRateApplicationTests {
         filmService.addLike(1, 1);
         filmService.addLike(1, 2);
         Optional<Film> film1 = filmStorage.getById(1);
-        Optional<Film> mostPop = filmService.getPopularFilm(5).stream().findFirst();
+        Optional<Film> mostPop = filmService.getPopularFilm(5, null, null).stream().findFirst();
         if (mostPop.isPresent() && film1.isPresent()) {
             assertEquals(film1.get(), mostPop.get(), "Неверный фильм");
         }

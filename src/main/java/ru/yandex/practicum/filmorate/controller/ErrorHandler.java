@@ -65,4 +65,10 @@ public class ErrorHandler {
     public String handleDirectorNotFoundException(final DirectorNotFoundException e){
         return e.getMessage();
     }
+
+    @ExceptionHandler(ReviewNotFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public String handleReviewNotFoundException(final ReviewNotFoundException e){
+        return e.getMessage();
+    }
 }

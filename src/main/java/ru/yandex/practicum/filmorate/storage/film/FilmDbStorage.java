@@ -1,16 +1,5 @@
 package ru.yandex.practicum.filmorate.storage.film;
 
-import java.sql.Date;
-import java.sql.PreparedStatement;
-import java.sql.Statement;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
-import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataAccessException;
@@ -28,6 +17,11 @@ import ru.yandex.practicum.filmorate.storage.director.DirectorStorage;
 import ru.yandex.practicum.filmorate.storage.genre.GenreStorage;
 import ru.yandex.practicum.filmorate.storage.mpa.MpaStorage;
 
+import java.sql.*;
+import java.sql.Date;
+import java.util.*;
+import java.util.stream.Collectors;
+
 @Slf4j
 @Component
 @RequiredArgsConstructor
@@ -36,7 +30,6 @@ public class FilmDbStorage implements FilmStorage {
     private final JdbcTemplate jdbcTemplate;
     private final MpaStorage mpaStorage;
     private final GenreStorage genreStorage;
-
     private final DirectorStorage directorStorage;
 
     @Override
@@ -130,15 +123,51 @@ public class FilmDbStorage implements FilmStorage {
         return films;
     }
 
-    public List<Film> getPopularFilm(int count) {
-        String sql = "SELECT m.movie_id, m.movie_name, m.description, m.release_date, m.duration, m.rate, m.mpa_id " +
-                "FROM MOVIE m\n" +
-                "left join MOVIE_LIKES ml on m.movie_id = ml.movie_id\n" +
-                "left join APP_USER AU on ML.user_id = AU.user_id\n" +
-                "GROUP BY m.movie_id\n" +
-                "ORDER BY COUNT(ml.user_id) desc\n" +
-                "limit ?";
-        SqlRowSet popularRows = jdbcTemplate.queryForRowSet(sql, count);
+    @Override
+    public List<Film> getPopularFilm(int count, Integer genreId, Integer year) {
+        SqlRowSet popularRows = null;
+        if(genreId == null && year == null) {
+            String sql = "SELECT m.movie_id, m.movie_name, m.description, m.release_date, m.duration, m.rate, m.mpa_id " +
+                    "FROM MOVIE m\n" +
+                    "left join MOVIE_LIKES ml on m.movie_id = ml.movie_id\n" +
+                    "left join APP_USER AU on ML.user_id = AU.user_id\n" +
+                    "GROUP BY m.movie_id\n" +
+                    "ORDER BY COUNT(ml.user_id) desc\n" +
+                    "limit ?";
+            popularRows = jdbcTemplate.queryForRowSet(sql, count);
+        } else if(year == null){
+            String sql = "SELECT m.movie_id, m.movie_name, m.description, m.release_date, m.duration, m.rate, m.mpa_id " +
+                    "FROM MOVIE m\n" +
+                    "left join MOVIE_LIKES ml on m.movie_id = ml.movie_id\n" +
+                    "left join APP_USER AU on ML.user_id = AU.user_id\n" +
+                    "WHERE m.movie_id IN " +
+                    "(SELECT movie_id FROM genre_movie WHERE genre_id=?)" +
+                    "GROUP BY m.movie_id\n" +
+                    "ORDER BY COUNT(ml.user_id) desc\n" +
+                    "limit ?";
+            popularRows = jdbcTemplate.queryForRowSet(sql, genreId, count);
+        } else if (genreId == null){
+            String sql = "SELECT m.movie_id, m.movie_name, m.description, m.release_date, m.duration, m.rate, m.mpa_id " +
+                    "FROM MOVIE m\n" +
+                    "left join MOVIE_LIKES ml on m.movie_id = ml.movie_id\n" +
+                    "left join APP_USER AU on ML.user_id = AU.user_id\n" +
+                    "WHERE EXTRACT(YEAR FROM m.release_date)=?" +
+                    "GROUP BY m.movie_id\n" +
+                    "ORDER BY COUNT(ml.user_id) desc\n" +
+                    "limit ?";
+            popularRows = jdbcTemplate.queryForRowSet(sql, year, count);
+        } else {
+            String sql = "SELECT m.movie_id, m.movie_name, m.description, m.release_date, m.duration, m.rate, m.mpa_id " +
+                    "FROM MOVIE m\n" +
+                    "left join MOVIE_LIKES ml on m.movie_id = ml.movie_id\n" +
+                    "left join APP_USER AU on ML.user_id = AU.user_id\n" +
+                    "WHERE m.movie_id IN " +
+                    "(SELECT movie_id FROM genre_movie WHERE genre_id=?) AND EXTRACT(YEAR FROM m.release_date)=?" +
+                    "GROUP BY m.movie_id\n" +
+                    "ORDER BY COUNT(ml.user_id) desc\n" +
+                    "limit ?";
+            popularRows = jdbcTemplate.queryForRowSet(sql, genreId, year, count);
+        }
         List<Film> films = new ArrayList<>();
         while (popularRows.next()) {
             Film film = makeFilm(popularRows);
@@ -174,7 +203,7 @@ public class FilmDbStorage implements FilmStorage {
         jdbcTemplate.update(sql, filmId, userId);
     }
 
-    public void removeFilm (long id) {
+    public void removeFilm(long id) {
         String sql = "DELETE FROM MOVIE WHERE movie_id = ?";
         jdbcTemplate.update(sql, id);
     }
@@ -220,8 +249,8 @@ public class FilmDbStorage implements FilmStorage {
             if (sortBy.equals("year")) {
                 String sql = "SELECT * FROM movie WHERE movie_id IN" +
                         " (SELECT movie_id FROM movie_director WHERE director_id=?) ORDER BY release_date";
-                SqlRowSet sqlRowSet = jdbcTemplate.queryForRowSet(sql,id);
-                while (sqlRowSet.next()){
+                SqlRowSet sqlRowSet = jdbcTemplate.queryForRowSet(sql, id);
+                while (sqlRowSet.next()) {
                     Film film = makeFilm(sqlRowSet);
                     films.add(film);
                 }
@@ -232,16 +261,16 @@ public class FilmDbStorage implements FilmStorage {
                         " (SELECT movie_id FROM movie_director WHERE director_id=?)" +
                         "GROUP BY m.movie_id" +
                         " ORDER BY COUNT(ml.user_id) DESC";
-                SqlRowSet sqlRowSet = jdbcTemplate.queryForRowSet(sql,id);
-                while (sqlRowSet.next()){
+                SqlRowSet sqlRowSet = jdbcTemplate.queryForRowSet(sql, id);
+                while (sqlRowSet.next()) {
                     Film film = makeFilm(sqlRowSet);
                     films.add(film);
                 }
             }
-        } catch (DataAccessException e){
+        } catch (DataAccessException e) {
             throw new FilmNotFoundException(String.format("У режиссера с id %d фильмов нет", id));
         }
-        if(films.size() == 0){
+        if (films.size() == 0) {
             throw new FilmNotFoundException(String.format("У режиссера с id %d фильмов нет", id));
         }
         return films;
@@ -250,11 +279,11 @@ public class FilmDbStorage implements FilmStorage {
     public List<Film> getCommonFilms(long userId, long friendId) {
         String sql = "SELECT * FROM MOVIE " +
                 "INNER JOIN MOVIE_LIKES ML on MOVIE.MOVIE_ID = ML.MOVIE_ID " +
-                "WHERE ML.USER_ID = 1 AND ML.MOVIE_ID in " +
-                "(SELECT ML.MOVIE_ID FROM MOVIE_LIKES ML WHERE USER_ID = 2)";
+                "WHERE ML.USER_ID = ? AND ML.MOVIE_ID in " +
+                "(SELECT ML.MOVIE_ID FROM MOVIE_LIKES ML WHERE USER_ID = ?)"; //fix
         List<Film> films = new ArrayList<>();
         log.info("Searching for common films...");
-        SqlRowSet filmRow = jdbcTemplate.queryForRowSet(sql);
+        SqlRowSet filmRow = jdbcTemplate.queryForRowSet(sql, userId, friendId);
         while (filmRow.next()) {
             Film film = makeFilm(filmRow);
             log.info("Film found: {}", film);
@@ -264,26 +293,78 @@ public class FilmDbStorage implements FilmStorage {
         return films;
     }
 
-    public List<Film> getRecommendedFilms(Long userRecommendedFor, List<Long> usersWithSameInterests) {
-        var sqlQuery = "SELECT f.* "
-            + "FROM MOVIE_LIKES l2 "
-            + "JOIN MOVIE f ON f.movie_id = l2.movie_id "
-            + "WHERE user_id IN (?) "
-            + "  AND l2.movie_id NOT IN "
-            + "    (SELECT l.movie_id "
-            + "     FROM MOVIE_LIKES l "
-            + "     WHERE user_id = ?)";
-
-        var usersWithSameInterestsIds = usersWithSameInterests.stream()
-            .map(String::valueOf)
-            .collect(Collectors.joining(","));
-
+    public List<Film> getFilmsByParam(String query, List<String> by) {
         List<Film> films = new ArrayList<>();
-        var filmRow = jdbcTemplate.queryForRowSet(sqlQuery, usersWithSameInterestsIds, userRecommendedFor);
+        switch (by.size()) {
+            case 1:
+                if (by.get(0).equals("title")) {
+                    films = searchByTitle(query);
+                } else if (by.get(0).equals("director")) {
+                    films = searchByDirector(query);
+                }
+                break;
+            case 2:
+                films = searchByTitleAndDirector(query);
+                break;
+            default:
+                throw new FilmNotFoundException("Фильмы по данному запросу не найдены.");
+        }
+        return films;
+    }
+
+    private List<Film> searchByTitle(String query) {
+        List<Film> films = new ArrayList<>();
+        String sql = "SELECT m.*, COUNT(ml.user_id)\n" +
+                "From MOVIE m\n" +
+                "left join MOVIE_LIKES ML on m.movie_id = ML.movie_id\n" +
+                "WHERE LOWER(m.movie_name) LIKE LOWER('%' || ? || '%')\n" +
+                "GROUP BY ml.movie_id\n" +
+                "ORDER BY COUNT(ml.user_id) DESC";
+        SqlRowSet filmRow = jdbcTemplate.queryForRowSet(sql, query);
         while (filmRow.next()) {
-          var film = makeFilm(filmRow);
-          films.add(film);
-      }
+            Film film = makeFilm(filmRow);
+            log.info("Найден фильм: {}", film.getName());
+            films.add(film);
+        }
+        return films;
+    }
+
+    private List<Film> searchByDirector(String query) {
+        List<Film> films = new ArrayList<>();
+        String sql = "SELECT m.*, COUNT(ml.user_id)\n" +
+                "From MOVIE m\n" +
+                "left join MOVIE_LIKES ML on m.movie_id = ML.movie_id\n" +
+                "left join MOVIE_DIRECTOR MD on m.movie_id = MD.movie_id\n" +
+                "join DIRECTOR D on MD.director_id = D.DIRECTOR_ID\n" +
+                "WHERE LOWER(D.NAME) LIKE LOWER('%' || ? || '%')\n" +
+                "GROUP BY ml.movie_id\n" +
+                "ORDER BY COUNT(ml.user_id) DESC";
+        SqlRowSet filmRow = jdbcTemplate.queryForRowSet(sql, query);
+        while (filmRow.next()) {
+            Film film = makeFilm(filmRow);
+            log.info("Найден фильм: {}", film.getName());
+            films.add(film);
+        }
+        return films;
+    }
+
+    private List<Film> searchByTitleAndDirector(String query) {
+        List<Film> films = new ArrayList<>();
+        String sql = "SELECT m.*, COUNT(ml.user_id)\n" +
+                "From MOVIE m\n" +
+                "left join MOVIE_LIKES ML on m.movie_id = ML.movie_id\n" +
+                "left join MOVIE_DIRECTOR MD on m.movie_id = MD.movie_id\n" +
+                "left join DIRECTOR D on MD.director_id = D.DIRECTOR_ID\n" +
+                "WHERE LOWER(m.movie_name) LIKE LOWER('%' || ? || '%') OR\n" +
+                "LOWER(D.NAME) LIKE LOWER('%' || ? || '%')\n" +
+                "GROUP BY ml.movie_id\n" +
+                "ORDER BY COUNT(ml.user_id) DESC";
+        SqlRowSet filmRow = jdbcTemplate.queryForRowSet(sql, query, query);
+        while (filmRow.next()) {
+            Film film = makeFilm(filmRow);
+            log.info("Найден фильм: {}", film.getName());
+            films.add(film);
+        }
         return films;
     }
 }

@@ -112,4 +112,8 @@ public class FilmService {
     public List<Film> getFilmByDirectorSortParam(long id, String sortBy){
         return filmStorage.getFilmByDirectorSortParam(id, sortBy);
     }
+
+    public List<Film> getFilmsByParam(String query, List<String> by) {
+        return filmStorage.getFilmsByParam(query, by);
+    }
 }

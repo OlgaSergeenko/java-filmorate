@@ -27,7 +27,6 @@ public class Film {
     @NonNull
     @Positive
     private int duration;
-    private int rate;
     @NonNull
     private Mpa mpa;
     @Builder.Default

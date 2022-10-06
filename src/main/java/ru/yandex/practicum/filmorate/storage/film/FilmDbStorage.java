@@ -378,9 +378,7 @@ public class FilmDbStorage implements FilmStorage {
             + "     FROM MOVIE_LIKES l "
             + "     WHERE user_id = ?)";
 
-        var usersWithSameInterestsIds = usersWithSameInterests.stream()
-            .map(String::valueOf)
-            .collect(Collectors.joining(","));
+        var usersWithSameInterestsIds = usersWithSameInterests.toArray();
 
         List<Film> films = new ArrayList<>();
         var filmRow = jdbcTemplate.queryForRowSet(sqlQuery, usersWithSameInterestsIds, userRecommendedFor);

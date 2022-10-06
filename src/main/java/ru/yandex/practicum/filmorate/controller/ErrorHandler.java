@@ -6,8 +6,6 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import ru.yandex.practicum.filmorate.exception.*;
 
-import java.util.Arrays;
-
 @RestControllerAdvice
 public class ErrorHandler {
 
@@ -63,6 +61,12 @@ public class ErrorHandler {
     @ExceptionHandler(DirectorNotFoundException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public String handleDirectorNotFoundException(final DirectorNotFoundException e){
+        return e.getMessage();
+    }
+
+    @ExceptionHandler(ReviewNotFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public String handleReviewNotFoundException(final ReviewNotFoundException e){
         return e.getMessage();
     }
 }

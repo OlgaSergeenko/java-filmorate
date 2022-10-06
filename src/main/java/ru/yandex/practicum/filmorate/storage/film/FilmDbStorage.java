@@ -2,8 +2,6 @@ package ru.yandex.practicum.filmorate.storage.film;
 
 import java.sql.Date;
 import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -109,19 +107,6 @@ public class FilmDbStorage implements FilmStorage {
                 genreStorage.getFilmGenres(filmsRows.getLong("movie_id")),
                 findMovieDirector(filmsRows.getInt("movie_id")));
     }
-
-  private Film makeFilm(ResultSet filmsRows) throws SQLException {
-    return new Film(
-        filmsRows.getLong("movie_id"),
-        Objects.requireNonNull(filmsRows.getString("movie_name")),
-        Objects.requireNonNull(filmsRows.getString("description")),
-        Objects.requireNonNull(filmsRows.getDate("release_date")).toLocalDate(),
-        filmsRows.getInt("duration"),
-        filmsRows.getInt("rate"),
-        getMpa(filmsRows.getLong("mpa_id")),
-        genreStorage.getFilmGenres(filmsRows.getLong("movie_id")),
-        findMovieDirector(filmsRows.getInt("movie_id")));
-  }
 
     private Mpa getMpa(long mpaId) {
         Optional<Mpa> mpa = mpaStorage.getMpaById(mpaId);
@@ -280,13 +265,7 @@ public class FilmDbStorage implements FilmStorage {
     }
 
     public List<Film> getRecommendedFilms(Long userRecommendedFor, List<Long> usersWithSameInterests) {
-        var sqlQuery = "SELECT f.movie_id, "
-            + "       f.movie_name, "
-            + "       f.description, "
-            + "       f.release_date, "
-            + "       f.rate, "
-            + "       f.duration, "
-            + "       f.mpa_id "
+        var sqlQuery = "SELECT f.* "
             + "FROM MOVIE_LIKES l2 "
             + "JOIN MOVIE f ON f.movie_id = l2.movie_id "
             + "WHERE user_id IN (?) "
@@ -298,6 +277,13 @@ public class FilmDbStorage implements FilmStorage {
         var usersWithSameInterestsIds = usersWithSameInterests.stream()
             .map(String::valueOf)
             .collect(Collectors.joining(","));
-        return jdbcTemplate.query(sqlQuery, (rs, rowNum) -> makeFilm(rs), usersWithSameInterestsIds, userRecommendedFor);
+
+        List<Film> films = new ArrayList<>();
+        var filmRow = jdbcTemplate.queryForRowSet(sqlQuery, usersWithSameInterestsIds, userRecommendedFor);
+        while (filmRow.next()) {
+          var film = makeFilm(filmRow);
+          films.add(film);
+      }
+        return films;
     }
 }

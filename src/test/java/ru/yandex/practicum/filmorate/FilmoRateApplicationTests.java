@@ -226,7 +226,6 @@ class FilmoRateApplicationTests {
                 .description("tratatata")
                 .releaseDate(LocalDate.of(2000,01,01))
                 .duration(120)
-                .rate(5)
                 .mpa(new Mpa(3, ""))
                 .build();
         filmService.create(film);
@@ -245,7 +244,6 @@ class FilmoRateApplicationTests {
                 .description("tralala")
                 .releaseDate(LocalDate.of(1895,12,28))
                 .duration(120)
-                .rate(5)
                 .mpa(new Mpa(4, ""))
                 .build();
         filmService.create(film);
@@ -264,7 +262,6 @@ class FilmoRateApplicationTests {
                 .description("descriptionNew")
                 .releaseDate(LocalDate.of(2012,12,27))
                 .duration(120)
-                .rate(1)
                 .mpa(new Mpa(1,""))
                 .build();
         filmService.update(update);
@@ -281,7 +278,6 @@ class FilmoRateApplicationTests {
                 .description("LoveStory")
                 .releaseDate(LocalDate.of(1980, 1,1))
                 .duration(90)
-                .rate(1)
                 .mpa(new Mpa(1,""))
                 .build();
         final FilmNotFoundException exception = assertThrows(FilmNotFoundException.class,
@@ -299,7 +295,6 @@ class FilmoRateApplicationTests {
                 .description("LoveStory")
                 .releaseDate(LocalDate.of(1895, 12,27))
                 .duration(90)
-                .rate(1)
                 .mpa(new Mpa(1,""))
                 .build();
         final ValidationException exception = assertThrows(ValidationException.class,

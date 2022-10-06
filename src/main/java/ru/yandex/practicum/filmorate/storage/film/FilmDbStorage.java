@@ -35,8 +35,8 @@ public class FilmDbStorage implements FilmStorage {
     @Override
     public Film create(Film film) {
         KeyHolder keyHolder = new GeneratedKeyHolder();
-        String sql = "INSERT INTO movie (movie_name, description, release_date, duration, rate, mpa_id) " +
-                "VALUES (?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO movie (movie_name, description, release_date, duration, mpa_id) " +
+                "VALUES (?, ?, ?, ?, ?)";
         jdbcTemplate.update(connection -> {
             PreparedStatement preparedStatement = connection.prepareStatement(
                     sql, Statement.RETURN_GENERATED_KEYS);
@@ -44,8 +44,7 @@ public class FilmDbStorage implements FilmStorage {
             preparedStatement.setString(2, film.getDescription());
             preparedStatement.setDate(3, Date.valueOf(film.getReleaseDate()));
             preparedStatement.setInt(4, film.getDuration());
-            preparedStatement.setInt(5, film.getRate());
-            preparedStatement.setLong(6, film.getMpa().getId());
+            preparedStatement.setLong(5, film.getMpa().getId());
             return preparedStatement;
         }, keyHolder);
         film.setId(Objects.requireNonNull(keyHolder.getKey()).longValue());
@@ -56,14 +55,13 @@ public class FilmDbStorage implements FilmStorage {
     @Override
     public Film update(Film film) {
         String sql = "UPDATE MOVIE\n" +
-                "SET movie_name = ?, description = ?, release_date = ?, duration = ?, rate = ?, mpa_id = ?\n" +
+                "SET movie_name = ?, description = ?, release_date = ?, duration = ?, mpa_id = ?\n" +
                 "WHERE movie_id = ?";
         jdbcTemplate.update(sql,
                 film.getName(),
                 film.getDescription(),
                 film.getReleaseDate(),
                 film.getDuration(),
-                film.getRate(),
                 film.getMpa().getId(),
                 film.getId());
         updateMovieDirector(film);
@@ -95,7 +93,6 @@ public class FilmDbStorage implements FilmStorage {
                 Objects.requireNonNull(filmsRows.getString("description")),
                 Objects.requireNonNull(filmsRows.getDate("release_date")).toLocalDate(),
                 filmsRows.getInt("duration"),
-                filmsRows.getInt("rate"),
                 getMpa(filmsRows.getLong("mpa_id")),
                 genreStorage.getFilmGenres(filmsRows.getLong("movie_id")),
                 findMovieDirector(filmsRows.getInt("movie_id")));
@@ -127,7 +124,7 @@ public class FilmDbStorage implements FilmStorage {
     public List<Film> getPopularFilm(int count, Integer genreId, Integer year) {
         SqlRowSet popularRows = null;
         if(genreId == null && year == null) {
-            String sql = "SELECT m.movie_id, m.movie_name, m.description, m.release_date, m.duration, m.rate, m.mpa_id " +
+            String sql = "SELECT m.* " +
                     "FROM MOVIE m\n" +
                     "left join MOVIE_LIKES ml on m.movie_id = ml.movie_id\n" +
                     "left join APP_USER AU on ML.user_id = AU.user_id\n" +
@@ -136,7 +133,7 @@ public class FilmDbStorage implements FilmStorage {
                     "limit ?";
             popularRows = jdbcTemplate.queryForRowSet(sql, count);
         } else if(year == null){
-            String sql = "SELECT m.movie_id, m.movie_name, m.description, m.release_date, m.duration, m.rate, m.mpa_id " +
+            String sql = "SELECT m.* " +
                     "FROM MOVIE m\n" +
                     "left join MOVIE_LIKES ml on m.movie_id = ml.movie_id\n" +
                     "left join APP_USER AU on ML.user_id = AU.user_id\n" +
@@ -147,7 +144,7 @@ public class FilmDbStorage implements FilmStorage {
                     "limit ?";
             popularRows = jdbcTemplate.queryForRowSet(sql, genreId, count);
         } else if (genreId == null){
-            String sql = "SELECT m.movie_id, m.movie_name, m.description, m.release_date, m.duration, m.rate, m.mpa_id " +
+            String sql = "SELECT m.* " +
                     "FROM MOVIE m\n" +
                     "left join MOVIE_LIKES ml on m.movie_id = ml.movie_id\n" +
                     "left join APP_USER AU on ML.user_id = AU.user_id\n" +
@@ -157,7 +154,7 @@ public class FilmDbStorage implements FilmStorage {
                     "limit ?";
             popularRows = jdbcTemplate.queryForRowSet(sql, year, count);
         } else {
-            String sql = "SELECT m.movie_id, m.movie_name, m.description, m.release_date, m.duration, m.rate, m.mpa_id " +
+            String sql = "SELECT m.*" +
                     "FROM MOVIE m\n" +
                     "left join MOVIE_LIKES ml on m.movie_id = ml.movie_id\n" +
                     "left join APP_USER AU on ML.user_id = AU.user_id\n" +

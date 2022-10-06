@@ -23,7 +23,6 @@ CREATE TABLE IF NOT EXISTS MOVIE
     description  VARCHAR(200) NOT NULL,
     release_date DATE         NOT NULL,
     duration     INTEGER      NOT NULL,
-    rate         INTEGER,
     mpa_id       BIGINT      NOT NULL REFERENCES mpa (mpa_id)
 );
 

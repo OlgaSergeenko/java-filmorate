@@ -1,5 +1,14 @@
 package ru.yandex.practicum.filmorate.storage.user;
 
+import java.sql.Date;
+import java.sql.PreparedStatement;
+import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -9,11 +18,6 @@ import org.springframework.jdbc.support.rowset.SqlRowSet;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.exception.UserNotFoundException;
 import ru.yandex.practicum.filmorate.model.User;
-
-import java.sql.Date;
-import java.sql.PreparedStatement;
-import java.sql.Statement;
-import java.util.*;
 
 @Component
 @Slf4j
@@ -141,6 +145,27 @@ public class UserDbStorage implements UserStorage {
     public void removeUser(long id) {
         String sql = "DELETE FROM APP_USER WHERE user_id = ?";
         jdbcTemplate.update(sql, id);
+    }
+
+    public List<Long> getUsersWithSameInterests(Long userId) {
+        var sqlQuery = "SELECT user_id "
+            + "FROM MOVIE_LIKES l2 "
+            + "WHERE movie_id IN ( "
+            + "   SELECT movie_id "
+            + "   FROM MOVIE_LIKES l "
+            + "   WHERE user_id = ? "
+            + ") "
+            + "AND user_id != ? "
+            + "GROUP BY user_id "
+            + "ORDER BY COUNT (movie_id) DESC "
+            + "LIMIT 5";
+
+        List<Long> userIds = new ArrayList<>();
+        var rs = jdbcTemplate.queryForRowSet(sqlQuery, userId, userId);
+        while (rs.next()) {
+            userIds.add(rs.getLong("user_id"));
+        }
+        return userIds;
     }
 }
 

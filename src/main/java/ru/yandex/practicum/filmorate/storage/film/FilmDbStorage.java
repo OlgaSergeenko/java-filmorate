@@ -364,4 +364,25 @@ public class FilmDbStorage implements FilmStorage {
         }
         return films;
     }
+
+    public List<Film> getRecommendedFilms(Long userRecommendedFor, List<Long> usersWithSameInterests) {
+        var sqlQuery = "SELECT f.* "
+            + "FROM MOVIE_LIKES l2 "
+            + "JOIN MOVIE f ON f.movie_id = l2.movie_id "
+            + "WHERE user_id IN (?) "
+            + "  AND l2.movie_id NOT IN "
+            + "    (SELECT l.movie_id "
+            + "     FROM MOVIE_LIKES l "
+            + "     WHERE user_id = ?)";
+
+        var usersWithSameInterestsIds = usersWithSameInterests.toArray();
+
+        List<Film> films = new ArrayList<>();
+        var filmRow = jdbcTemplate.queryForRowSet(sqlQuery, usersWithSameInterestsIds, userRecommendedFor);
+        while (filmRow.next()) {
+            var film = makeFilm(filmRow);
+            films.add(film);
+        }
+        return films;
+    }
 }

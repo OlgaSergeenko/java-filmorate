@@ -37,8 +37,6 @@ public class ReviewService {
         return reviewStorage.updateReview(review);
     }
 
-    /* Тесты в postman намекают, что не нужно указывать id того, кто удалил review
-    При этом для ленты событий оно требуется, так что немного изменил метод */
     public void deleteReview(long id) {
         Optional<Review> review = getById(id);
         reviewStorage.delete(id);

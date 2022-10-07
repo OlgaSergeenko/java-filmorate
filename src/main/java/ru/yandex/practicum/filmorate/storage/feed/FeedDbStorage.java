@@ -30,11 +30,11 @@ public class FeedDbStorage implements FeedStorage {
         String sql = "INSERT INTO FEED (now_stamp, user_id, event_type, " +
                 "operation, entity_id) VALUES (?, ?, ?, ?, ?)";
         log.info("Adding event: type={}, operation={}, user={}, entity={}", eventType, operation, userId, entityId);
-        jdbcTemplate.update(sql, Timestamp.from(Instant.now()).getTime(), userId, eventType, operation, entityId);
+        jdbcTemplate.update(sql, Timestamp.from(Instant.now()), userId, eventType, operation, entityId);
     }
     private Event makeEvent(ResultSet rs) throws SQLException {
         return new Event(
-                rs.getLong("now_stamp"),
+                rs.getTimestamp("now_stamp").getTime(),
                 rs.getLong("user_id"),
                 rs.getString("event_type"),
                 rs.getString("operation"),

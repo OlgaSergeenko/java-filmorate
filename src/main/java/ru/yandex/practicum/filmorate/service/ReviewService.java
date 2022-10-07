@@ -20,13 +20,11 @@ public class ReviewService {
     private final UserStorage userStorage;
     private final FeedStorage feedStorage;
 
-    private static final String EVENT_TYPE = "REVIEW";
-
     public Review addReview(Review review) {
         filmStorage.getById(review.getFilmId());
         userStorage.getUserById(review.getUserId());
         Review result = reviewStorage.saveReview(review);
-        feedStorage.addEvent(result.getUserId(), EVENT_TYPE, Constants.ADD_OPERATION, result.getReviewId());
+        feedStorage.addEvent(result.getUserId(), Constants.EVENT_REVIEW, Constants.ADD_OPERATION, result.getReviewId());
         return result;
     }
 
@@ -34,7 +32,7 @@ public class ReviewService {
         Review review = reviewStorage.getById(requestReview.getReviewId()).get();
         review.setContent(requestReview.getContent());
         review.setIsPositive(requestReview.getIsPositive());
-        feedStorage.addEvent(review.getUserId(), EVENT_TYPE, Constants.UPDATE_OPERATION,
+        feedStorage.addEvent(review.getUserId(), Constants.EVENT_REVIEW, Constants.UPDATE_OPERATION,
                 requestReview.getReviewId());
         return reviewStorage.updateReview(review);
     }
@@ -44,7 +42,8 @@ public class ReviewService {
     public void deleteReview(long id) {
         Optional<Review> review = getById(id);
         reviewStorage.delete(id);
-        review.ifPresent(value -> feedStorage.addEvent(value.getUserId(), EVENT_TYPE, Constants.REMOVE_OPERATION, id));
+        review.ifPresent(value -> feedStorage.addEvent(value.getUserId(),
+                Constants.EVENT_REVIEW, Constants.REMOVE_OPERATION, id));
     }
 
     public Optional<Review> getById(long id) {

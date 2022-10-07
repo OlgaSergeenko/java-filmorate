@@ -28,8 +28,6 @@ public class FilmService {
     private final UserStorage userStorage;
     private final FeedStorage feedStorage;
 
-    private static final String EVENT_TYPE = "LIKE";
-
     public Film create(Film film) {
         validateReleaseDate(film);
         filmStorage.create(film);
@@ -69,7 +67,7 @@ public class FilmService {
         validateId(userId);
         filmStorage.getById(filmId);
         userStorage.getUserById(userId);
-        feedStorage.addEvent(userId, EVENT_TYPE, Constants.ADD_OPERATION, filmId);
+        feedStorage.addEvent(userId, Constants.EVENT_LIKE, Constants.ADD_OPERATION, filmId);
         return filmStorage.addLike(filmId, userId);
     }
 
@@ -83,7 +81,7 @@ public class FilmService {
         filmStorage.getById(filmId);
         userStorage.getUserById(userId);
         filmStorage.removeLike(filmId, userId);
-        feedStorage.addEvent(userId, EVENT_TYPE, Constants.REMOVE_OPERATION, filmId);
+        feedStorage.addEvent(userId, Constants.EVENT_LIKE, Constants.REMOVE_OPERATION, filmId);
     }
 
     public void removeFilm (long id) {

@@ -19,7 +19,6 @@ public class UserService {
 
     private final UserStorage userStorage;
     private final FeedStorage feedStorage;
-    private static final String EVENT_TYPE = "FRIEND";
 
     public User create(User user) {
         validateUserName(user);
@@ -49,7 +48,7 @@ public class UserService {
         validateId(friendId);
         userStorage.getUserById(userId); //проверка наличия в бд
         userStorage.getUserById(friendId); //проверка наличия в бд
-        feedStorage.addEvent(userId, EVENT_TYPE, Constants.ADD_OPERATION, friendId);
+        feedStorage.addEvent(userId, Constants.EVENT_FRIEND, Constants.ADD_OPERATION, friendId);
         return userStorage.addFriend(userId, friendId);
     }
 
@@ -62,7 +61,7 @@ public class UserService {
     public void removeFriend(long userId, long friendId) {
         validateId(userId);
         validateId(friendId);
-        feedStorage.addEvent(userId, EVENT_TYPE, Constants.REMOVE_OPERATION, friendId);
+        feedStorage.addEvent(userId, Constants.EVENT_FRIEND, Constants.REMOVE_OPERATION, friendId);
         userStorage.removeFriend(userId, friendId);
     }
 

@@ -34,7 +34,7 @@ public class ReviewService {
         Review review = reviewStorage.getById(requestReview.getReviewId()).get();
         review.setContent(requestReview.getContent());
         review.setIsPositive(requestReview.getIsPositive());
-        feedStorage.addEvent(requestReview.getUserId(), EVENT_TYPE, Constants.UPDATE_OPERATION,
+        feedStorage.addEvent(review.getUserId(), EVENT_TYPE, Constants.UPDATE_OPERATION,
                 requestReview.getReviewId());
         return reviewStorage.updateReview(review);
     }

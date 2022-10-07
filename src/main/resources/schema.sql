@@ -108,7 +108,7 @@ CREATE TABLE IF NOT EXISTS EVENT_OPERATION
 
 CREATE TABLE IF NOT EXISTS FEED
 (
-    now_stamp TIMESTAMP NOT NULL,
+    now_stamp BIGINT NOT NULL,
     user_id    BIGINT    NOT NULL REFERENCES app_user (user_id) ON DELETE CASCADE,
     event_type varchar   NOT NULL REFERENCES EVENT_TYPE (event_type) ON UPDATE CASCADE,
     operation  varchar   NOT NULL references EVENT_OPERATION (operation_type) ON UPDATE CASCADE,

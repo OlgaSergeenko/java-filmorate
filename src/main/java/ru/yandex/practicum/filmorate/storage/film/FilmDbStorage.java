@@ -175,8 +175,13 @@ public class FilmDbStorage implements FilmStorage {
 
     @Override
     public Set<Long> addLike(long filmId, long userId) {
+        String sqlCheck = "SELECT * FROM MOVIE_LIKES WHERE movie_id = ? AND user_id = ?";
+        if (jdbcTemplate.queryForRowSet(sqlCheck, filmId, userId).next()) {
+            removeLike(filmId, userId);
+        }
         String sql = "INSERT INTO MOVIE_LIKES (movie_id, user_id) VALUES ( ?, ? )";
         jdbcTemplate.update(sql, filmId, userId);
+        log.info("Пользователь {} поставил лайк фильму {}", userId, filmId);
         return getAllFilmLikes(filmId);
     }
 

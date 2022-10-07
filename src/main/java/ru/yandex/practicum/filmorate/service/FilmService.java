@@ -3,16 +3,16 @@ package ru.yandex.practicum.filmorate.service;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestParam;
 import ru.yandex.practicum.filmorate.exception.IncorrectIdException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Mpa;
+import ru.yandex.practicum.filmorate.storage.feed.FeedStorage;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.genre.GenreStorage;
 import ru.yandex.practicum.filmorate.storage.mpa.MpaStorage;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
+import ru.yandex.practicum.filmorate.util.Constants;
 
 import java.util.*;
 
@@ -26,6 +26,7 @@ public class FilmService {
     private final GenreStorage genreStorage;
     private final MpaStorage mpaStorage;
     private final UserStorage userStorage;
+    private final FeedStorage feedStorage;
 
     public Film create(Film film) {
         validateReleaseDate(film);
@@ -66,6 +67,7 @@ public class FilmService {
         validateId(userId);
         filmStorage.getById(filmId);
         userStorage.getUserById(userId);
+        feedStorage.addEvent(userId, Constants.EVENT_LIKE, Constants.ADD_OPERATION, filmId);
         return filmStorage.addLike(filmId, userId);
     }
 
@@ -79,6 +81,7 @@ public class FilmService {
         filmStorage.getById(filmId);
         userStorage.getUserById(userId);
         filmStorage.removeLike(filmId, userId);
+        feedStorage.addEvent(userId, Constants.EVENT_LIKE, Constants.REMOVE_OPERATION, filmId);
     }
 
     public void removeFilm (long id) {

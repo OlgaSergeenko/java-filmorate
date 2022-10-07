@@ -3,9 +3,11 @@ package ru.yandex.practicum.filmorate.service;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.model.Review;
+import ru.yandex.practicum.filmorate.storage.feed.FeedStorage;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.review.ReviewStorage;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
+import ru.yandex.practicum.filmorate.util.Constants;
 
 import java.util.List;
 import java.util.Optional;
@@ -16,24 +18,30 @@ public class ReviewService {
     private final ReviewStorage reviewStorage;
     private final FilmStorage filmStorage;
     private final UserStorage userStorage;
+    private final FeedStorage feedStorage;
 
     public Review addReview(Review review) {
         filmStorage.getById(review.getFilmId());
         userStorage.getUserById(review.getUserId());
-
-        return reviewStorage.saveReview(review);
+        Review result = reviewStorage.saveReview(review);
+        feedStorage.addEvent(result.getUserId(), Constants.EVENT_REVIEW, Constants.ADD_OPERATION, result.getReviewId());
+        return result;
     }
 
     public Review updateReview(Review requestReview) {
         Review review = reviewStorage.getById(requestReview.getReviewId()).get();
         review.setContent(requestReview.getContent());
         review.setIsPositive(requestReview.getIsPositive());
-
+        feedStorage.addEvent(review.getUserId(), Constants.EVENT_REVIEW, Constants.UPDATE_OPERATION,
+                requestReview.getReviewId());
         return reviewStorage.updateReview(review);
     }
 
     public void deleteReview(long id) {
+        Optional<Review> review = getById(id);
         reviewStorage.delete(id);
+        review.ifPresent(value -> feedStorage.addEvent(value.getUserId(),
+                Constants.EVENT_REVIEW, Constants.REMOVE_OPERATION, id));
     }
 
     public Optional<Review> getById(long id) {

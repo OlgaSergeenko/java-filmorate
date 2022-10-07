@@ -4,8 +4,11 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.IncorrectIdException;
+import ru.yandex.practicum.filmorate.model.Event;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.storage.feed.FeedStorage;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
+import ru.yandex.practicum.filmorate.util.Constants;
 
 import java.util.*;
 
@@ -15,6 +18,7 @@ import java.util.*;
 public class UserService {
 
     private final UserStorage userStorage;
+    private final FeedStorage feedStorage;
 
     public User create(User user) {
         validateUserName(user);
@@ -44,6 +48,7 @@ public class UserService {
         validateId(friendId);
         userStorage.getUserById(userId); //проверка наличия в бд
         userStorage.getUserById(friendId); //проверка наличия в бд
+        feedStorage.addEvent(userId, Constants.EVENT_FRIEND, Constants.ADD_OPERATION, friendId);
         return userStorage.addFriend(userId, friendId);
     }
 
@@ -56,6 +61,7 @@ public class UserService {
     public void removeFriend(long userId, long friendId) {
         validateId(userId);
         validateId(friendId);
+        feedStorage.addEvent(userId, Constants.EVENT_FRIEND, Constants.REMOVE_OPERATION, friendId);
         userStorage.removeFriend(userId, friendId);
     }
 
@@ -71,6 +77,12 @@ public class UserService {
         validateId(id);
         getUserById(id);
         userStorage.removeUser(id);
+    }
+
+    public List<Event> getFeed(long id) {
+        validateId(id);
+        getUserById(id);
+        return feedStorage.getFeed(id);
     }
 
 

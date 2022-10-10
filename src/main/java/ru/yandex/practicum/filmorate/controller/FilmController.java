@@ -1,6 +1,9 @@
 package ru.yandex.practicum.filmorate.controller;
 
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.annotation.AliasFor;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.exception.IncorrectParameterException;
 import ru.yandex.practicum.filmorate.model.Film;
@@ -13,14 +16,10 @@ import java.util.Optional;
 import java.util.Set;
 
 @RestController
-@Slf4j
 @RequestMapping("/films")
+@AllArgsConstructor
 public class FilmController{
     private final FilmService filmService;
-
-    public FilmController(FilmService filmService) {
-        this.filmService = filmService;
-    }
 
     @GetMapping
     public List<Film> findAll() {
@@ -38,7 +37,7 @@ public class FilmController{
     }
 
     @GetMapping("/{id}")
-    public Optional<Film> getById(@PathVariable("id") long filmId) {
+    public Film getById(@PathVariable("id") long filmId) {
         return filmService.getById(filmId);
     }
 
@@ -55,18 +54,16 @@ public class FilmController{
     }
 
     @GetMapping("/popular")
-    public List<Film> getPopularFilm(@RequestParam(defaultValue = "10", required = false) int count,
+    public List<Film> getPopularFilm(@RequestParam(defaultValue = "10", required = false) @Positive @Validated int count,
                                      @RequestParam(required = false) Integer genreId,
                                      @RequestParam(required = false) Integer year) {
-        if (count <= 0) {
-            throw new IncorrectParameterException("count");
-        }
         return filmService.getPopularFilm(count, genreId, year);
     }
 
 
     @GetMapping("/director/{id}")
-    public List<Film> getFilmByDirectorSortParam(@PathVariable long id, @RequestParam String sortBy) {
+    public List<Film> getFilmByDirectorSortParam(@PathVariable long id,
+                                                 @RequestParam String sortBy) {
         return filmService.getFilmByDirectorSortParam(id, sortBy);
     }
 
@@ -76,9 +73,8 @@ public class FilmController{
     }
 
     @GetMapping("/common")
-    public List<Film> getCommonFilms(@RequestParam @Positive long userId,
+    public List<Film> getCommonFilms(@RequestParam @Positive @Validated long userId,
             @RequestParam @Positive long friendId) {
-        log.info("GET-request at /films/common: userId={}, friendId={}", userId, friendId);
         return filmService.getCommonFilms(userId, friendId);
     }
 

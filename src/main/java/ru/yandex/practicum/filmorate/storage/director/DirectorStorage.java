@@ -9,7 +9,7 @@ public interface DirectorStorage {
 
     List<Director> getDirectors();
 
-    Optional<Director> getDirectorById(long id);
+    Director getDirectorById(long id);
 
     Director createDirector(Director director);
 

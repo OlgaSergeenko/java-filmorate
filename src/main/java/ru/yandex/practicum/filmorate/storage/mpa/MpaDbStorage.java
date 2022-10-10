@@ -33,7 +33,7 @@ public class MpaDbStorage implements MpaStorage {
     }
 
     @Override
-    public Optional<Mpa> getMpaById(long id) {
+    public Mpa getMpaById(long id) {
         String sql = "SELECT * FROM MPA WHERE mpa_id = ?";
         SqlRowSet mpaRows = jdbcTemplate.queryForRowSet(sql, id);
         if(mpaRows.next()) {
@@ -41,12 +41,12 @@ public class MpaDbStorage implements MpaStorage {
                     mpaRows.getLong("mpa_id"),
                     mpaRows.getString("mpa_name"));
 
-            log.info("Найден рейтинг: {} {}", mpa.getId(), mpa.getName());
+            log.info("MPA found: {} {}", mpa.getId(), mpa.getName());
 
-            return Optional.of(mpa);
+            return mpa;
         } else {
-            log.error("Рейтинг с идентификатором {} не найден.", id);
-            throw new MpaNotFoundException(String.format("Рейтинг с идентификатором %d не найден.", id));
+            log.error("MPA with id {} not found.", id);
+            throw new MpaNotFoundException(String.format("MPA with ID %d not found.", id));
         }
     }
 }

@@ -20,7 +20,7 @@ public class MpaService {
         return mpaStorage.getMpas();
     }
 
-    public Optional<Mpa> getMpaById(long id) {
+    public Mpa getMpaById(long id) {
         return mpaStorage.getMpaById(id);
     }
 }

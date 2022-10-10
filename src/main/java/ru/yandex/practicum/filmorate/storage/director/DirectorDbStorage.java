@@ -26,13 +26,12 @@ public class DirectorDbStorage implements DirectorStorage {
     }
 
     @Override
-    public Optional<Director> getDirectorById(long id) {
+    public Director getDirectorById(long id) {
         String sql = "SELECT * FROM director WHERE director_id=?";
         try {
-            Director director = jdbcTemplate.queryForObject(sql, (rs, rowNum) -> makeDirector(rs), id);
-            return Optional.of(director);
+            return jdbcTemplate.queryForObject(sql, (rs, rowNum) -> makeDirector(rs), id);
         } catch (DataAccessException e){
-            throw new DirectorNotFoundException(String.format("Режисер с идентификатором %d не найден.", id));
+            throw new DirectorNotFoundException(String.format("Director with id %d not found", id));
         }
     }
 
@@ -53,8 +52,11 @@ public class DirectorDbStorage implements DirectorStorage {
     @Override
     public Director updateDirector(Director director) {
         String sql = "UPDATE director SET name=? WHERE director_id=?";
-        jdbcTemplate.update(sql,director.getName(),director.getId());
-        return getDirectorById(director.getId()).get();
+        int status = jdbcTemplate.update(sql,director.getName(),director.getId());
+        if (status > 0) {
+            return director;
+        }
+        throw new DirectorNotFoundException("Director with id: " + director.getId() + " not found.");
     }
 
     @Override

@@ -15,7 +15,6 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
 
 @Repository
 @AllArgsConstructor
@@ -55,7 +54,7 @@ public class ReviewDbStorage implements ReviewStorage {
         if (status > 0) {
             return review;
         }
-        throw new ReviewNotFoundException("Отзыв с идентификатором: " + review.getReviewId() + " не найден.");
+        throw new ReviewNotFoundException("Review with id: " + review.getReviewId() + " not found.");
     }
 
     @Override
@@ -65,7 +64,7 @@ public class ReviewDbStorage implements ReviewStorage {
     }
 
     @Override
-    public Optional<Review> getById(long id) {
+    public Review getById(long id) {
         String sql = "SELECT R.REVIEW_ID, R.CONTENT, R.IS_POSITIVE, R.USER_ID, R.MOVIE_ID, SUM(IS_LIKE) AS USEFUL " +
                 "FROM REVIEW AS R " +
                 "LEFT JOIN REVIEW_USER RU on R.REVIEW_ID = RU.REVIEW_ID " +
@@ -73,9 +72,9 @@ public class ReviewDbStorage implements ReviewStorage {
                 "GROUP BY R.REVIEW_ID ";
 
         try {
-            return Optional.of(jdbcTemplate.queryForObject(sql, this::mapRowToReview, id));
+            return jdbcTemplate.queryForObject(sql, this::mapRowToReview, id);
         } catch (EmptyResultDataAccessException e) {
-            throw new ReviewNotFoundException("Отзыв с идентификатором: " + id + " не найден.");
+            throw new ReviewNotFoundException("Review with id: " + id + " not found.");
         }
     }
 
@@ -103,7 +102,7 @@ public class ReviewDbStorage implements ReviewStorage {
     }
 
     @Override
-    public Optional<Review> addLike(long reviewId, long userId) {
+    public Review addLike(long reviewId, long userId) {
         String sql = "INSERT INTO REVIEW_USER (USER_ID, REVIEW_ID, IS_LIKE) VALUES (?, ?, ?)";
         jdbcTemplate.update(sql, userId, reviewId, 1);
 
@@ -111,7 +110,7 @@ public class ReviewDbStorage implements ReviewStorage {
     }
 
     @Override
-    public Optional<Review> deleteReviewUser(long reviewId, long userId) {
+    public Review deleteReviewUser(long reviewId, long userId) {
         String sql = "DELETE FROM REVIEW_USER WHERE review_id = ? AND USER_ID = ? ";
         jdbcTemplate.update(sql, reviewId, userId);
 
@@ -119,7 +118,7 @@ public class ReviewDbStorage implements ReviewStorage {
     }
 
     @Override
-    public Optional<Review> addDislike(long reviewId, long userId) {
+    public Review addDislike(long reviewId, long userId) {
         String sql = "INSERT INTO REVIEW_USER (USER_ID, REVIEW_ID, IS_LIKE) VALUES (?, ?, ?)";
         jdbcTemplate.update(sql, userId, reviewId, -1);
 

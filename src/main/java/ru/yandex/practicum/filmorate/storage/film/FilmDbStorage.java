@@ -9,7 +9,6 @@ import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.jdbc.support.rowset.SqlRowSet;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.exception.FilmNotFoundException;
-import ru.yandex.practicum.filmorate.exception.MpaNotFoundException;
 import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Mpa;
@@ -57,19 +56,22 @@ public class FilmDbStorage implements FilmStorage {
         String sql = "UPDATE MOVIE\n" +
                 "SET movie_name = ?, description = ?, release_date = ?, duration = ?, mpa_id = ?\n" +
                 "WHERE movie_id = ?";
-        jdbcTemplate.update(sql,
+        int status = jdbcTemplate.update(sql,
                 film.getName(),
                 film.getDescription(),
                 film.getReleaseDate(),
                 film.getDuration(),
                 film.getMpa().getId(),
                 film.getId());
-        updateMovieDirector(film);
-        return film;
+        if (status > 0) {
+            updateMovieDirector(film);
+            return film;
+        }
+        throw new FilmNotFoundException(String.format("Film with id %d is not found", film.getId()));
     }
 
     @Override
-    public Optional<Film> getById(long id) {
+    public Film getById(long id) {
         String sql = "SELECT * " +
                 "FROM movie " +
                 "WHERE movie_id = ?";
@@ -77,12 +79,12 @@ public class FilmDbStorage implements FilmStorage {
         if (filmsRows.next()) {
             Film film = makeFilm(filmsRows);
 
-            log.info("Найден фильм: {} {}", film.getId(), film.getName());
+            log.info("Found film: {} {}", film.getId(), film.getName());
 
-            return Optional.of(film);
+            return film;
         } else {
-            log.error("Фильм с идентификатором {} не найден.", id);
-            throw new FilmNotFoundException(String.format("Фильм с идентификатором %d не найден.", id));
+            log.error("FIlm with id {} is not found", id);
+            throw new FilmNotFoundException(String.format("Film with id %d is not found", id));
         }
     }
 
@@ -99,12 +101,7 @@ public class FilmDbStorage implements FilmStorage {
     }
 
     private Mpa getMpa(long mpaId) {
-        Optional<Mpa> mpa = mpaStorage.getMpaById(mpaId);
-        if (mpa.isEmpty()) {
-            log.error("Рейтинг с идентификатором {} не найден.", mpaId);
-            throw new MpaNotFoundException(String.format("Рейтинг с идентификатором %d не найден.", mpaId));
-        }
-        return mpa.get();
+        return mpaStorage.getMpaById(mpaId);
     }
 
     @Override
@@ -124,46 +121,13 @@ public class FilmDbStorage implements FilmStorage {
     public List<Film> getPopularFilm(int count, Integer genreId, Integer year) {
         SqlRowSet popularRows = null;
         if(genreId == null && year == null) {
-            String sql = "SELECT m.* " +
-                    "FROM MOVIE m\n" +
-                    "left join MOVIE_LIKES ml on m.movie_id = ml.movie_id\n" +
-                    "left join APP_USER AU on ML.user_id = AU.user_id\n" +
-                    "GROUP BY m.movie_id\n" +
-                    "ORDER BY COUNT(ml.user_id) desc\n" +
-                    "limit ?";
-            popularRows = jdbcTemplate.queryForRowSet(sql, count);
+            popularRows = sortFilmByLikes(count);
         } else if(year == null){
-            String sql = "SELECT m.* " +
-                    "FROM MOVIE m\n" +
-                    "left join MOVIE_LIKES ml on m.movie_id = ml.movie_id\n" +
-                    "left join APP_USER AU on ML.user_id = AU.user_id\n" +
-                    "WHERE m.movie_id IN " +
-                    "(SELECT movie_id FROM genre_movie WHERE genre_id=?)" +
-                    "GROUP BY m.movie_id\n" +
-                    "ORDER BY COUNT(ml.user_id) desc\n" +
-                    "limit ?";
-            popularRows = jdbcTemplate.queryForRowSet(sql, genreId, count);
+            popularRows = sortFilmByGenre(genreId, count);
         } else if (genreId == null){
-            String sql = "SELECT m.* " +
-                    "FROM MOVIE m\n" +
-                    "left join MOVIE_LIKES ml on m.movie_id = ml.movie_id\n" +
-                    "left join APP_USER AU on ML.user_id = AU.user_id\n" +
-                    "WHERE EXTRACT(YEAR FROM m.release_date)=?" +
-                    "GROUP BY m.movie_id\n" +
-                    "ORDER BY COUNT(ml.user_id) desc\n" +
-                    "limit ?";
-            popularRows = jdbcTemplate.queryForRowSet(sql, year, count);
+            popularRows = sortFilmByYear(year, count);
         } else {
-            String sql = "SELECT m.*" +
-                    "FROM MOVIE m\n" +
-                    "left join MOVIE_LIKES ml on m.movie_id = ml.movie_id\n" +
-                    "left join APP_USER AU on ML.user_id = AU.user_id\n" +
-                    "WHERE m.movie_id IN " +
-                    "(SELECT movie_id FROM genre_movie WHERE genre_id=?) AND EXTRACT(YEAR FROM m.release_date)=?" +
-                    "GROUP BY m.movie_id\n" +
-                    "ORDER BY COUNT(ml.user_id) desc\n" +
-                    "limit ?";
-            popularRows = jdbcTemplate.queryForRowSet(sql, genreId, year, count);
+            popularRows = sortFilmByYearAndGenre(genreId, year, count);
         }
         List<Film> films = new ArrayList<>();
         while (popularRows.next()) {
@@ -171,6 +135,55 @@ public class FilmDbStorage implements FilmStorage {
             films.add(film);
         }
         return films;
+    }
+
+    private SqlRowSet sortFilmByLikes(int count) {
+        String sql = "SELECT m.* " +
+                "FROM MOVIE m\n" +
+                "left join MOVIE_LIKES ml on m.movie_id = ml.movie_id\n" +
+                "left join APP_USER AU on ML.user_id = AU.user_id\n" +
+                "GROUP BY m.movie_id\n" +
+                "ORDER BY COUNT(ml.user_id) desc\n" +
+                "limit ?";
+        return jdbcTemplate.queryForRowSet(sql, count);
+    }
+
+    private SqlRowSet sortFilmByGenre(long genreId, int count) {
+        String sql = "SELECT m.* " +
+                "FROM MOVIE m\n" +
+                "left join MOVIE_LIKES ml on m.movie_id = ml.movie_id\n" +
+                "left join APP_USER AU on ML.user_id = AU.user_id\n" +
+                "WHERE m.movie_id IN " +
+                "(SELECT movie_id FROM genre_movie WHERE genre_id=?)" +
+                "GROUP BY m.movie_id\n" +
+                "ORDER BY COUNT(ml.user_id) desc\n" +
+                "limit ?";
+        return jdbcTemplate.queryForRowSet(sql, genreId, count);
+    }
+
+    private SqlRowSet sortFilmByYear(long year, int count) {
+        String sql = "SELECT m.* " +
+                "FROM MOVIE m\n" +
+                "left join MOVIE_LIKES ml on m.movie_id = ml.movie_id\n" +
+                "left join APP_USER AU on ML.user_id = AU.user_id\n" +
+                "WHERE EXTRACT(YEAR FROM m.release_date)=?" +
+                "GROUP BY m.movie_id\n" +
+                "ORDER BY COUNT(ml.user_id) desc\n" +
+                "limit ?";
+        return jdbcTemplate.queryForRowSet(sql, year, count);
+    }
+
+    private SqlRowSet sortFilmByYearAndGenre(long genreId, long year, int count) {
+        String sql = "SELECT m.*" +
+                "FROM MOVIE m\n" +
+                "left join MOVIE_LIKES ml on m.movie_id = ml.movie_id\n" +
+                "left join APP_USER AU on ML.user_id = AU.user_id\n" +
+                "WHERE m.movie_id IN " +
+                "(SELECT movie_id FROM genre_movie WHERE genre_id=?) AND EXTRACT(YEAR FROM m.release_date)=?" +
+                "GROUP BY m.movie_id\n" +
+                "ORDER BY COUNT(ml.user_id) desc\n" +
+                "limit ?";
+        return jdbcTemplate.queryForRowSet(sql, genreId, year, count);
     }
 
     @Override
@@ -181,7 +194,7 @@ public class FilmDbStorage implements FilmStorage {
         }
         String sql = "INSERT INTO MOVIE_LIKES (movie_id, user_id) VALUES ( ?, ? )";
         jdbcTemplate.update(sql, filmId, userId);
-        log.info("Пользователь {} поставил лайк фильму {}", userId, filmId);
+        log.info("User {} add like to movie {}", userId, filmId);
         return getAllFilmLikes(filmId);
     }
 
@@ -241,7 +254,7 @@ public class FilmDbStorage implements FilmStorage {
     private List<Director> findMovieDirector(int filmId) {
         String sql = "SELECT * FROM movie_director WHERE movie_id=?";
         return jdbcTemplate.query(sql,
-                (rs, rowNum) -> directorStorage.getDirectorById(rs.getInt("director_id")).get(), filmId);
+                (rs, rowNum) -> directorStorage.getDirectorById(rs.getInt("director_id")), filmId);
     }
 
     @Override
@@ -270,10 +283,10 @@ public class FilmDbStorage implements FilmStorage {
                 }
             }
         } catch (DataAccessException e) {
-            throw new FilmNotFoundException(String.format("У режиссера с id %d фильмов нет", id));
+            throw new FilmNotFoundException(String.format("Director with id %d has no movies", id));
         }
         if (films.size() == 0) {
-            throw new FilmNotFoundException(String.format("У режиссера с id %d фильмов нет", id));
+            throw new FilmNotFoundException(String.format("Director with id %d has no movies", id));
         }
         return films;
     }
@@ -309,7 +322,7 @@ public class FilmDbStorage implements FilmStorage {
                 films = searchByTitleAndDirector(query);
                 break;
             default:
-                throw new FilmNotFoundException("Фильмы по данному запросу не найдены.");
+                throw new FilmNotFoundException("No movies found by this request.");
         }
         return films;
     }

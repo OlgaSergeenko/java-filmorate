@@ -29,7 +29,7 @@ public class ReviewService {
     }
 
     public Review updateReview(Review requestReview) {
-        Review review = reviewStorage.getById(requestReview.getReviewId()).get();
+        Review review = reviewStorage.getById(requestReview.getReviewId());
         review.setContent(requestReview.getContent());
         review.setIsPositive(requestReview.getIsPositive());
         feedStorage.addEvent(review.getUserId(), Constants.EVENT_REVIEW, Constants.UPDATE_OPERATION,
@@ -38,13 +38,13 @@ public class ReviewService {
     }
 
     public void deleteReview(long id) {
-        Optional<Review> review = getById(id);
+        Review review = getById(id);
         reviewStorage.delete(id);
-        review.ifPresent(value -> feedStorage.addEvent(value.getUserId(),
-                Constants.EVENT_REVIEW, Constants.REMOVE_OPERATION, id));
+        feedStorage.addEvent(review.getUserId(),
+                Constants.EVENT_REVIEW, Constants.REMOVE_OPERATION, id);
     }
 
-    public Optional<Review> getById(long id) {
+    public Review getById(long id) {
         return reviewStorage.getById(id);
     }
 
@@ -53,28 +53,32 @@ public class ReviewService {
         return reviewStorage.getByFilm(filmId, count);
     }
 
-    public Optional<Review> addLike(long reviewId, long userId) {
+    public Review addLike(long reviewId, long userId) {
         userStorage.getUserById(userId);
+        reviewStorage.getById(reviewId);
         reviewStorage.deleteReviewUser(reviewId, userId);
 
         return reviewStorage.addLike(reviewId, userId);
     }
 
-    public Optional<Review> deleteLike(long reviewId, long userId) {
+    public Review deleteLike(long reviewId, long userId) {
         userStorage.getUserById(userId);
+        reviewStorage.getById(reviewId);
 
         return reviewStorage.deleteReviewUser(reviewId, userId);
     }
 
-    public Optional<Review> addDislike(long reviewId, long userId) {
+    public Review addDislike(long reviewId, long userId) {
         userStorage.getUserById(userId);
+        reviewStorage.getById(reviewId);
         reviewStorage.deleteReviewUser(reviewId, userId);
 
         return reviewStorage.addDislike(reviewId, userId);
     }
 
-    public Optional<Review> deleteDislike(long reviewId, long userId) {
+    public Review deleteDislike(long reviewId, long userId) {
         userStorage.getUserById(userId);
+        reviewStorage.getById(reviewId);
 
         return reviewStorage.deleteReviewUser(reviewId, userId);
     }

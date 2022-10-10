@@ -57,17 +57,20 @@ public class UserDbStorage implements UserStorage {
         String sql = "UPDATE APP_USER " +
                 "SET email = ?,login = ?,name = ?,birthday = ? " +
                 "WHERE user_id = ?";
-        jdbcTemplate.update(sql,
+        int status = jdbcTemplate.update(sql,
                 user.getEmail(),
                 user.getLogin(),
                 user.getName(),
                 user.getBirthday(),
                 user.getId());
-        return user;
+        if (status > 0) {
+            return user;
+        }
+        throw new UserNotFoundException(String.format("Пользователь с идентификатором %d не найден.", user.getId()));
     }
 
     @Override
-    public Optional<User> getUserById(long id) {
+    public User getUserById(long id) {
         String sqlGetById = "SELECT * " +
                 "FROM APP_USER " +
                 "WHERE user_id = ?";
@@ -75,7 +78,7 @@ public class UserDbStorage implements UserStorage {
         if (userRows.next()) {
             User user = makeUser(userRows);
             log.info("Найден пользователь: {} {}", user.getId(), user.getLogin());
-            return Optional.of(user);
+            return user;
         } else {
             log.error("Пользователь с идентификатором {} не найден.", id);
             throw new UserNotFoundException(String.format("Пользователь с идентификатором %d не найден.", id));

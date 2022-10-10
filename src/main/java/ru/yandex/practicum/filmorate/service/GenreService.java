@@ -20,7 +20,7 @@ public class GenreService {
         return genreStorage.getGenres();
     }
 
-    public Optional<Genre> getGenreById(long id) {
+    public Genre getGenreById(long id) {
         return genreStorage.getGenreById(id);
     }
 }

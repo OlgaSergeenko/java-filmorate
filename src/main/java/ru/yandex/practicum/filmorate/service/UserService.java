@@ -27,11 +27,10 @@ public class UserService {
 
     public User update(User user) {
         validateUserName(user);
-        userStorage.getUserById(user.getId());
         return userStorage.update(user);
     }
 
-    public Optional<User> getUserById(long id) {
+    public User getUserById(long id) {
         validateId(id);
         return userStorage.getUserById(id);
     }
@@ -41,9 +40,7 @@ public class UserService {
     }
 
     public Set<User> addFriend(long userId, long friendId) {
-        if (userId == friendId) {
-            throw new IncorrectIdException("Пользователь не может добавить в друзья себя.");
-        }
+        validateUserFriendIds(userId, friendId);
         validateId(userId);
         validateId(friendId);
         userStorage.getUserById(userId); //проверка наличия в бд
@@ -85,17 +82,23 @@ public class UserService {
         return feedStorage.getFeed(id);
     }
 
+    private void validateUserFriendIds(long userId, long friendId) {
+        if (userId == friendId) {
+            throw new IncorrectIdException("User and Friend cannot have the same ID");
+        }
+    }
+
 
     private void validateId(long id) {
         if (id <= 0) {
-            throw new IncorrectIdException(String.format("Некорректный id  - %d", id));
+            throw new IncorrectIdException(String.format("Incorrect id  - %d", id));
         }
     }
 
     private void validateUserName(User user) {
-        if (user.getName().isEmpty() || user.getName().isBlank()) {
+        if (user.getName().isEmpty()) {
             user.setName(user.getLogin());
-            log.info("Логин установлен на имя пользователя.");
+            log.info("Login is now set up for user name.");
         }
     }
 }

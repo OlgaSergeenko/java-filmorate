@@ -12,13 +12,13 @@ public interface ReviewStorage {
 
     void delete(long id);
 
-    Optional<Review> getById(long id);
+    Review getById(long id);
 
     List<Review> getByFilm(Long filmId, long count);
 
-    Optional<Review> addLike(long reviewId, long userId);
+    Review addLike(long reviewId, long userId);
 
-    Optional<Review> deleteReviewUser(long reviewId, long userId);
+    Review deleteReviewUser(long reviewId, long userId);
 
-    Optional<Review> addDislike(long reviewId, long userId);
+    Review addDislike(long reviewId, long userId);
 }

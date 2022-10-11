@@ -16,7 +16,7 @@ import java.util.Set;
 @RequestMapping("/films")
 @AllArgsConstructor
 @Validated
-public class FilmController{
+public class FilmController {
     private final FilmService filmService;
 
     @GetMapping

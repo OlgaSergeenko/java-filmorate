@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.service.FilmService;
 import ru.yandex.practicum.filmorate.util.validation.SortDirect;
+import ru.yandex.practicum.filmorate.util.validation.SortSearch;
 
 import javax.validation.Valid;
 import javax.validation.constraints.Positive;
@@ -77,7 +78,7 @@ public class FilmController{
 
     @GetMapping("/search")
     public List<Film> getFilmsByParam(@RequestParam String query,
-                                        @RequestParam List<String> by) {
+                                        @RequestParam @SortSearch List<String> by) {
         return filmService.getFilmsByParam(query, by);
     }
 }

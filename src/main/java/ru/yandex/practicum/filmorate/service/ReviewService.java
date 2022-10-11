@@ -10,7 +10,6 @@ import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 import ru.yandex.practicum.filmorate.util.Constants;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
 @AllArgsConstructor
@@ -23,7 +22,7 @@ public class ReviewService {
     public Review addReview(Review review) {
         filmStorage.getById(review.getFilmId());
         userStorage.getUserById(review.getUserId());
-        Review result = reviewStorage.saveReview(review);
+        Review result = reviewStorage.createReview(review);
         feedStorage.addEvent(result.getUserId(), Constants.EVENT_REVIEW, Constants.ADD_OPERATION, result.getReviewId());
         return result;
     }

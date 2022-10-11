@@ -23,7 +23,7 @@ public class ReviewDbStorage implements ReviewStorage {
     private final JdbcTemplate jdbcTemplate;
 
     @Override
-    public Review saveReview(Review review) {
+    public Review createReview(Review review) {
         KeyHolder keyHolder = new GeneratedKeyHolder();
         String sql = "INSERT INTO review (content, is_positive, user_id, movie_id) VALUES(?, ?, ?, ?)";
         jdbcTemplate.update(

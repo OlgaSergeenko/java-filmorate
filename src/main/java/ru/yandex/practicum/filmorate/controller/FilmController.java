@@ -1,23 +1,21 @@
 package ru.yandex.practicum.filmorate.controller;
 
 import lombok.AllArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.core.annotation.AliasFor;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import ru.yandex.practicum.filmorate.exception.IncorrectParameterException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.service.FilmService;
+import ru.yandex.practicum.filmorate.util.validation.SortDirect;
 
 import javax.validation.Valid;
 import javax.validation.constraints.Positive;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 
 @RestController
 @RequestMapping("/films")
 @AllArgsConstructor
+@Validated
 public class FilmController{
     private final FilmService filmService;
 
@@ -60,10 +58,9 @@ public class FilmController{
         return filmService.getPopularFilm(count, genreId, year);
     }
 
-
     @GetMapping("/director/{id}")
     public List<Film> getFilmByDirectorSortParam(@PathVariable long id,
-                                                 @RequestParam String sortBy) {
+                                                 @RequestParam @SortDirect String sortBy) {
         return filmService.getFilmByDirectorSortParam(id, sortBy);
     }
 

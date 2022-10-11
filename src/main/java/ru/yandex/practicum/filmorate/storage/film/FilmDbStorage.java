@@ -333,7 +333,7 @@ public class FilmDbStorage implements FilmStorage {
                 "From MOVIE m\n" +
                 "left join MOVIE_LIKES ML on m.movie_id = ML.movie_id\n" +
                 "WHERE LOWER(m.movie_name) LIKE LOWER('%' || ? || '%')\n" +
-                "GROUP BY ml.movie_id\n" +
+                "GROUP BY m.movie_id\n" +
                 "ORDER BY COUNT(ml.user_id) DESC";
         SqlRowSet filmRow = jdbcTemplate.queryForRowSet(sql, query);
         while (filmRow.next()) {
@@ -352,7 +352,7 @@ public class FilmDbStorage implements FilmStorage {
                 "left join MOVIE_DIRECTOR MD on m.movie_id = MD.movie_id\n" +
                 "join DIRECTOR D on MD.director_id = D.DIRECTOR_ID\n" +
                 "WHERE LOWER(D.NAME) LIKE LOWER('%' || ? || '%')\n" +
-                "GROUP BY ml.movie_id\n" +
+                "GROUP BY m.movie_id\n" +
                 "ORDER BY COUNT(ml.user_id) DESC";
         SqlRowSet filmRow = jdbcTemplate.queryForRowSet(sql, query);
         while (filmRow.next()) {
@@ -372,7 +372,7 @@ public class FilmDbStorage implements FilmStorage {
                 "left join DIRECTOR D on MD.director_id = D.DIRECTOR_ID\n" +
                 "WHERE LOWER(m.movie_name) LIKE LOWER('%' || ? || '%') OR\n" +
                 "LOWER(D.NAME) LIKE LOWER('%' || ? || '%')\n" +
-                "GROUP BY ml.movie_id\n" +
+                "GROUP BY m.movie_id\n" +
                 "ORDER BY COUNT(ml.user_id) DESC";
         SqlRowSet filmRow = jdbcTemplate.queryForRowSet(sql, query, query);
         while (filmRow.next()) {

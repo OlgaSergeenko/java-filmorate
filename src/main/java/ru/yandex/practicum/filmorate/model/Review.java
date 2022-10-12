@@ -4,11 +4,9 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.validator.constraints.Length;
 
-import javax.validation.constraints.Max;
 import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Pattern;
-
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
@@ -16,7 +14,7 @@ import javax.validation.constraints.Pattern;
 public class Review {
     private Long reviewId;
     @NotNull
-    @Pattern(regexp = "^.{0,255}$")
+    @Length(max = 255)
     private String content;
     @NotNull
     private Boolean isPositive;

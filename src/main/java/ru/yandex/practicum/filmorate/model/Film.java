@@ -1,6 +1,7 @@
 package ru.yandex.practicum.filmorate.model;
 
 import lombok.*;
+import org.hibernate.validator.constraints.Length;
 
 import javax.validation.constraints.*;
 import java.time.LocalDate;
@@ -17,10 +18,10 @@ public class Film {
     @NonNull
     @NotEmpty
     @NotBlank
-    @Pattern(regexp = "^.{1,50}$")
+    @Length(max = 50)
     private String name;
     @NonNull
-    @Pattern(regexp = "^.{1,200}$")
+    @Length(max = 200)
     private String description;
     @NonNull
     private LocalDate releaseDate;

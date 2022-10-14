@@ -1,10 +1,9 @@
 package ru.yandex.practicum.filmorate.model;
 
 import lombok.*;
+import org.hibernate.validator.constraints.Length;
 
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotEmpty;
-import javax.validation.constraints.Positive;
+import javax.validation.constraints.*;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -19,17 +18,20 @@ public class Film {
     @NonNull
     @NotEmpty
     @NotBlank
+    @Length(max = 50)
     private String name;
     @NonNull
+    @Length(max = 200)
     private String description;
     @NonNull
     private LocalDate releaseDate;
     @NonNull
     @Positive
     private int duration;
-    private int rate;
     @NonNull
     private Mpa mpa;
     @Builder.Default
     private List<Genre> genres = new ArrayList<>();
+    @Builder.Default
+    private List<Director> directors = new ArrayList<>();
 }

@@ -16,18 +16,16 @@ import java.util.Optional;
 @Slf4j
 @RequiredArgsConstructor
 public class MpaDbStorage implements MpaStorage {
-
-    private final static String GET = "SELECT * FROM mpa";
-    private final static String GET_BY_ID = "SELECT * FROM MPA WHERE ID = ?";
     private final JdbcTemplate jdbcTemplate;
 
     @Override
     public List<Mpa> getMpas() {
         List<Mpa> mpas = new ArrayList<>();
-        SqlRowSet mpaRows = jdbcTemplate.queryForRowSet(GET);
+        String sql = "SELECT * FROM mpa";
+        SqlRowSet mpaRows = jdbcTemplate.queryForRowSet(sql);
         while (mpaRows.next()) {
             Mpa mpa = new Mpa(
-                    mpaRows.getLong("id"),
+                    mpaRows.getLong("mpa_id"),
                     mpaRows.getString("mpa_name"));
             mpas.add(mpa);
         }
@@ -35,19 +33,20 @@ public class MpaDbStorage implements MpaStorage {
     }
 
     @Override
-    public Optional<Mpa> getMpaById(long id) {
-        SqlRowSet mpaRows = jdbcTemplate.queryForRowSet(GET_BY_ID, id);
+    public Mpa getMpaById(long id) {
+        String sql = "SELECT * FROM MPA WHERE mpa_id = ?";
+        SqlRowSet mpaRows = jdbcTemplate.queryForRowSet(sql, id);
         if(mpaRows.next()) {
             Mpa mpa = new Mpa (
-                    mpaRows.getLong("id"),
+                    mpaRows.getLong("mpa_id"),
                     mpaRows.getString("mpa_name"));
 
-            log.info("Найден рейтинг: {} {}", mpa.getId(), mpa.getName());
+            log.info("MPA found: {} {}", mpa.getId(), mpa.getName());
 
-            return Optional.of(mpa);
+            return mpa;
         } else {
-            log.error("Рейтинг с идентификатором {} не найден.", id);
-            throw new MpaNotFoundException(String.format("Рейтинг с идентификатором %d не найден.", id));
+            log.error("MPA with id {} not found.", id);
+            throw new MpaNotFoundException(String.format("MPA with ID %d not found.", id));
         }
     }
 }

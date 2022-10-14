@@ -6,7 +6,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import ru.yandex.practicum.filmorate.exception.*;
 
-import java.util.Arrays;
+import javax.validation.ConstraintViolationException;
 
 @RestControllerAdvice
 public class ErrorHandler {
@@ -42,8 +42,15 @@ public class ErrorHandler {
     }
 
     @ExceptionHandler
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public String handleConstraintViolationException (final ConstraintViolationException e) {
+        return e.getMessage();
+    }
+
+    @ExceptionHandler
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public String handleThrowable(final Throwable e) {
+        e.printStackTrace();
         return "Произошла непредвиденная ошибка.";
     }
 
@@ -56,6 +63,18 @@ public class ErrorHandler {
     @ExceptionHandler(GenreNotFoundException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public String handleGenreNotFoundException (final GenreNotFoundException e) {
+        return e.getMessage();
+    }
+
+    @ExceptionHandler(DirectorNotFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public String handleDirectorNotFoundException(final DirectorNotFoundException e){
+        return e.getMessage();
+    }
+
+    @ExceptionHandler(ReviewNotFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public String handleReviewNotFoundException(final ReviewNotFoundException e){
         return e.getMessage();
     }
 }

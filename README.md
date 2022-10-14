@@ -1,35 +1,23 @@
 # java-filmorate
 Template repository for Filmorate project.
 
-[Link to diagram in project docs](drawSQL-filmorate.v3.png)
+[Link to diagram in project docs](drawSQL-database.v6.png)
 
 To see the diagram online use this [link](https://drawsql.app/teams/new-13/diagrams/filmorate)
 
-![Database](drawSQL-filmorate.v3.png)
+![Database](drawSQL-database.v6.png)
 
-#### Пример запроса на получение списка юзеров:
-SELECT * </br>
-FROM user
+### As the result of group project, the following functionality has been implemented:
 
-#### Пример запроса на получение юзера по id:
-SELECT * </br>
-FROM user AS u </br>
-WHERE u.user_id = id
-
-#### Пример запроса на получение таблицы друзей конкретного юзера (id = 1):
-SELECT * </br>
-FROM friend_user AS f </br>
-WHERE f.user_id = id
-
-#### Пример запроса на получение рейтинга фильма по названию:
-SELECT m.movie_name, </br>
-        r.rating_name </br>
-FROM movie AS m </br>
-LEFT OUTER JOIN rating AS r ON m.rating_id = r.rating_id
-
-#### Пример запроса на получение списка всех фильмов с рейтингом PG:
-SELECT m.movie_name, </br>
-g.genre_name </br>
-FROM movie AS m </br>
-LEFT OUTER JOIN genre_movie AS gm ON m.movie_id = gm.movie_id </br>
-LEFT OUTER JOIN genre AS g ON gm.genre_id = g.genre_id
+- "Reviews" - users can now to leave reviews for movies. Added reviews have 
+a rating and additional characteristics: the usefulness and positivity of the review.
+- "Feed" - the ability to view the latest events on the platform is now added - adding to friends, removing from 
+friends, likes and reviews left by the user's friends.
+- "Recommendations" - ability to recommend movies to users with familiar interests is added.
+- "Directors" - information about the movie director is added as well as sorting most popular movies by 
+given director and year.
+- "Remove endpoint" - it is now possible do remove users and movies from the platform.
+- "Common films" - implemented output of movies shared with a friend sorted by their popularity.
+- "Most popular" - Added the ability to display top-N movies by the number of likes. Filtering is based
+on two parameters: by genre and/or for the specified year.
+- "Search" - Implemented search by movie title and director. The algorithm can search by substring.

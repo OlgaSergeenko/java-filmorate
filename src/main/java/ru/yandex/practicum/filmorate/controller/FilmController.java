@@ -1,46 +1,43 @@
 package ru.yandex.practicum.filmorate.controller;
 
-import org.springframework.beans.factory.annotation.Qualifier;
+import lombok.AllArgsConstructor;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import ru.yandex.practicum.filmorate.exception.IncorrectParameterException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.service.FilmService;
-import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
+import ru.yandex.practicum.filmorate.util.validation.SortDirect;
+import ru.yandex.practicum.filmorate.util.validation.SortSearch;
 
 import javax.validation.Valid;
+import javax.validation.constraints.Positive;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 
 @RestController
 @RequestMapping("/films")
+@AllArgsConstructor
+@Validated
 public class FilmController{
     private final FilmService filmService;
-    private final FilmStorage filmStorage;
-
-    public FilmController(FilmService filmService, @Qualifier("filmDbStorage") FilmStorage filmStorage) {
-        this.filmService = filmService;
-        this.filmStorage = filmStorage;
-    }
 
     @GetMapping
     public List<Film> findAll() {
-        return filmStorage.findAll();
+        return filmService.findAll();
     }
 
     @PostMapping
     public Film create(@Valid @RequestBody Film film) {
-       return filmStorage.create(film);
+        return filmService.create(film);
     }
 
     @PutMapping
     public Film update(@Valid @RequestBody Film film) {
-        return filmStorage.update(film);
+        return filmService.update(film);
     }
 
     @GetMapping("/{id}")
-    public Optional<Film> getById(@PathVariable("id") long filmId) {
-        return filmStorage.getById(filmId);
+    public Film getById(@PathVariable("id") long filmId) {
+        return filmService.getById(filmId);
     }
 
     @PutMapping("/{id}/like/{userId}")
@@ -50,16 +47,39 @@ public class FilmController{
     }
 
     @DeleteMapping("/{id}/like/{userId}")
-    public Set<Long> removeLike(@PathVariable("id") long filmId,
+    public void removeLike(@PathVariable("id") long filmId,
                                 @PathVariable("userId") long userId) {
-        return filmService.removeLike(filmId, userId);
+        filmService.removeLike(filmId, userId);
     }
 
     @GetMapping("/popular")
-    public List<Film> getPopularFilm(@RequestParam(defaultValue = "10", required = false) int count) {
-        if (count <= 0) {
-            throw new IncorrectParameterException("count");
-        }
-        return filmService.getPopularFilm(count);
+    public List<Film> getPopularFilm(@RequestParam(defaultValue = "10", required = false) @Positive @Validated int count,
+                                     @RequestParam(required = false) Integer genreId,
+                                     @RequestParam(required = false) Integer year) {
+        return filmService.getPopularFilm(count, genreId, year);
+    }
+
+    @GetMapping("/director/{id}")
+    public List<Film> getFilmByDirectorSortParam(@PathVariable long id,
+                                                 @RequestParam @SortDirect String sortBy) {
+        return filmService.getFilmByDirectorSortParam(id, sortBy);
+    }
+
+    @DeleteMapping("/{id}")
+    public void removeFilm (@PathVariable("id") long filmId) {
+        filmService.removeFilm(filmId);
+    }
+
+    @GetMapping("/common")
+    public List<Film> getCommonFilms(@RequestParam @Positive @Validated long userId,
+            @RequestParam @Positive long friendId) {
+        return filmService.getCommonFilms(userId, friendId);
+    }
+
+    @GetMapping("/search")
+    public List<Film> getFilmsByParam(@RequestParam String query,
+                                        @RequestParam @SortSearch List<String> by) {
+        return filmService.getFilmsByParam(query, by);
     }
 }
+

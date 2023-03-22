@@ -1,5 +1,13 @@
-# java-filmorate
-Template repository for Filmorate project.
+# Filmorate project
+Repository for group project.
+
+### Overall description
+The Filmorate application is a backend for a service that deals with movies and ratings. 
+Users are able to add, update, search and remove movies, make friends, leave reviews and recommend 
+movies to each other. 
+
+#### Technologie-Stack:
+- Spring Boot, JDBC template, embedded database (H2), SQL, Maven, Git, logging, Lombok, Exceptions.
 
 [Link to diagram in project docs](drawSQL-database.v6.png)
 
